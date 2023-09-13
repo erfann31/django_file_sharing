@@ -7,9 +7,9 @@ this is a django application to share offline your file between your devices (Ma
 git clone https://github.com/erfann31/django_file_sharing.git
 ```
 
-## Run this project
+## Run Project
 
-Go to project root and execute the following command in console to run the server: 
+Go to project root and execute the following command in console to run the Project: 
 
 ```
 pip install -r requirements.txt
@@ -18,7 +18,7 @@ python manage.py migrate
 python manage.py runserver 0.0.0.0:8080
 ```
 
-## Know your IP address 
+## Know Your IP Address 
 ### Windows
 
 Press Win + R to open the Run dialog, type cmd, and press Enter.</br>
@@ -33,3 +33,13 @@ Your IP address will be displayed on the right side.</br>
 
 Open a terminal window.</br>
 Type ifconfig or ip a and press Enter. Look for your active network interface to find your IP address.</br>
+## File Sharing
+To communicate and share files, your devices must be on the same network. It means that they should all be connected to the same Wi-Fi.</br>
+Then you should search the IP address obtained in the previous step along with the port in your browser.</br>
+```
+http://your_server_ip:8080
+```
+For example:
+```
+http://192.168.1.1:8080
+```
