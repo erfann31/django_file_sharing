@@ -1,4 +1,4 @@
-![5](https://github.com/erfann31/django_file_sharing/assets/75057732/61b25650-28b7-4f47-93b0-92e2f724db76)# django_file_sharing
+# django_file_sharing
 This is a django application to share your file between your devices (Mac-Android-Win-Linux-Ios) **no need internet** 
 ## Clone project
 
