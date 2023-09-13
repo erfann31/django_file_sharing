@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link href="https://fonts.googleapis.com/css?family=Nunito+Sans:400,400i,700,900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            background-color: whitesmoke;
+            background-image: url("https://www.transparenttextures.com/patterns/lyonnette.png");
+            border-bottom: 0 solid black;
+            height: max-content;
+            display: flex;
+            text-align: center;
+            padding: 40px 0;
+            justify-content: center;
+            align-items: center;
+        }
+
+        h1 {
+            color: #6d992e;
+            font-family: "Nunito Sans", "Helvetica Neue", sans-serif;
+            font-weight: 900;
+            font-size: 40px;
+            margin-bottom: 20px; /* Increased margin for spacing */
+        }
+
+        p {
+            color: #404F5E;
+            font-family: "Nunito Sans", "Helvetica Neue", sans-serif;
+            font-size: 20px;
+            margin: 0;
+        }
+
+        logo {
+            color: #6d992e;
+            font-size: 100px;
+            line-height: 200px;
+            margin-top: 25%;
+        }
+
+        .card {
+            background: white;
+            padding: 60px;
+            border-radius: 4px;
+            box-shadow: 0 2px 3px #C8D0D8;
+            display: inline-block;
+            margin: 0 auto;
+        }
+
+        /* Style for the Upload buttons */
+        .upload-buttons {
+            text-align: center;
+            margin-top: 30px; /* Increased margin for spacing */
+        }
+
+        button[type="submit"] {
+            width: 150px;
+            background-color: #6d992e;
+            color: white;
+            border: none;
+            padding: 12px 30px; /* Increased padding for better button size */
+            border-radius: 5px;
+            font-size: 18px; /* Increased font size for better readability */
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin: 0 20px; /* Adjusted margin for spacing */
+            display: inline-block;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #0c3214;
+        }
+
+        /* Style for smaller icons */
+        .fas.fa-xs {
+            margin-right: 5px;
+            margin-top: 12px;
+            font-size: 18px;
+        }
+    </style>
+    <title>File List</title>
+</head>
+<body>
+<div class="card">
+    <div style="border-radius: 50%; height: 200px; width: 200px; background: #F8FAF5; margin: 0 auto;">
+        <logo class="fas fa-file-download"></logo> <!-- Replaced the checkmark with the archive icon -->
+    </div>
+    <h1>Uploaded Files</h1>
+    <ul style="text-align: left;">
+        {% for filename in files %}
+            <li style="margin-top:20px;">
+                <a href="{% url 'download_file' filename %}">{{ filename }}</a>
+            </li>
+        {% empty %}
+            <li>No files uploaded.</li>
+        {% endfor %}
+    </ul>
+    <div class="upload-buttons">
+        <button type="submit" onclick="window.location.href='/upload'"><i class="fas fa-upload fa-xs"></i> Upload</button>
+        <button type="submit" onclick="window.location.href='/'"><i class="fas fa-home fa-xs"></i> Home</button>
+    </div>
+</div>
+</body>
+</html>
