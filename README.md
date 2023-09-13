@@ -1,5 +1,5 @@
 # django_file_sharing
-this is a django application to share offline your file between your devices (Mac-Android-Win-Linux-Ios)
+This is a django application to share your file between your devices (Mac-Android-Win-Linux-Ios) **no need internet** 
 ## Clone project
 
 
