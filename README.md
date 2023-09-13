@@ -32,7 +32,7 @@ Your IP address will be displayed on the right side.</br>
 ### Linux:
 
 Open a terminal window.</br>
-Type ifconfig or ip a and press Enter. Look for your active network interface to find your IP address.</br>
+Type ifconfig or ip and press Enter. Look for your active network interface to find your IP address.</br>
 ## File Sharing
 To communicate and share files, your devices must be on the same network. It means that they should all be connected to the same Wi-Fi.</br>
 Then you should search the IP address obtained in the previous step along with the port in your browser.</br>
