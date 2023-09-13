@@ -1,9 +1,9 @@
 import os
 
+from django.conf import settings
+from django.http import HttpResponse
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
-from django.http import HttpResponse, FileResponse
-from django.conf import settings
 
 from file.forms import FileUploadForm
 
@@ -18,14 +18,13 @@ def upload_file(request):
         form = FileUploadForm()
     return render(request, 'file/upload.html', {'form': form})
 
+
 def upload_success(request):
-    # Your view logic here
     return render(request, 'file/upload_success.html')
 
 
 def file_list(request):
     if request.method == 'POST':
-        # Handle file upload
         form = FileUploadForm(request.POST, request.FILES)
         if form.is_valid():
             instance = form.save()
@@ -33,11 +32,15 @@ def file_list(request):
     else:
         form = FileUploadForm()
 
-    # List files in the 'uploads/' folder
     upload_dir = os.path.join(settings.MEDIA_ROOT, 'uploads')
+
+    if not os.path.exists(upload_dir):
+        os.makedirs(upload_dir)
+
     files = os.listdir(upload_dir)
 
     return render(request, 'file/file_list.html', {'form': form, 'files': files})
+
 
 def download_file(request, filename):
     try:
@@ -48,5 +51,7 @@ def download_file(request, filename):
             return response
     except FileNotFoundError:
         return HttpResponse("File not found", status=404)
+
+
 def home(request):
     return render(request, 'file/home.html')
