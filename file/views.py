@@ -12,12 +12,8 @@ def upload_file(request):
     if request.method == 'POST':
         form = FileUploadForm(request.POST, request.FILES)
         if form.is_valid():
-            files = request.FILES.getlist('file')
-            for file in files:
-                instance = form.save(commit=False)
-                instance.file = file
-                instance.save()
-            return JsonResponse({'message': 'Files uploaded successfully'}, status=201)
+            instance = form.save()
+            return JsonResponse({'message': 'File uploaded successfully'}, status=201)
     else:
         form = FileUploadForm()
     return render(request, 'file/upload.html', {'form': form})
