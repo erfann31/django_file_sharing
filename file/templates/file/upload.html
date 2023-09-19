@@ -1,21 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=0.7, user-scalable=yes">
     <link href="https://fonts.googleapis.com/css?family=Nunito+Sans:400,400i,700,900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <title>Upload</title>
 </head>
 <title>File Upload</title>
 <style>
-    body {
-        background-color: whitesmoke;
-        background-image: url("https://www.transparenttextures.com/patterns/lyonnette.png");
-        border-bottom: 0 solid black;
-        height: 450px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
 
     #FileUpload {
         display: flex;
@@ -26,13 +18,25 @@
         color: crimson;
     }
 
+    body {
+        background-color: whitesmoke;
+        background-image: url("https://www.transparenttextures.com/patterns/lyonnette.png");
+        border-bottom: 0 solid black;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0;
+    }
+
     .wrapper {
+        position: relative;
         margin: 30px;
         padding: 10px;
         box-shadow: 0 19px 38px rgba(0, 0, 0, 0.30), 0 15px 12px rgba(0, 0, 0, 0.22);
         border-radius: 10px;
-        background-color: white;
-        width: 415px;
+        background-color: whitesmoke;
+        max-width: 415px;
+        width: 90%;
     }
 
     .upload {
@@ -44,6 +48,7 @@
         align-items: center;
         border-radius: 5px;
     }
+
 
     .upload p {
         margin-top: 12px;
@@ -60,7 +65,7 @@
 
     button[type="submit"] {
         background-color: #6d992e;
-        color: white;
+        color: whitesmoke;
         border: none;
         padding: 10px 20px;
         border-radius: 5px;
@@ -90,7 +95,7 @@
     .nav-buttons button {
         width: 150px;
         background-color: #6d992e;
-        color: white;
+        color: whitesmoke;
         border: none;
         padding: 12px 30px;
         border-radius: 5px;
