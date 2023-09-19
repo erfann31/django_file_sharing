@@ -22,6 +22,10 @@
         justify-content: center;
     }
 
+    .remove-file {
+        color: crimson;
+    }
+
     .wrapper {
         margin: 30px;
         padding: 10px;
@@ -31,7 +35,6 @@
         width: 415px;
     }
 
-    /* === Upload Box === */
     .upload {
         margin: 10px;
         height: 85px;
@@ -50,37 +53,26 @@
         letter-spacing: 1.5px;
     }
 
-    .upload__button {
-        background-color: #e6f5e9;
-        border-radius: 10px;
-        padding: 0 8px 0 10px;
-    }
-
-    .upload__button:hover {
-        cursor: pointer;
-        opacity: 0.8;
-    }
-
 
     #file-label {
         display: inline-block;
     }
 
     button[type="submit"] {
-        background-color: #6d992e; /* Change the background color */
-        color: white; /* Change the text color */
+        background-color: #6d992e;
+        color: white;
         border: none;
         padding: 10px 20px;
         border-radius: 5px;
         font-size: 16px;
         cursor: pointer;
         transition: background-color 0.3s ease;
-        margin: 0 auto;
+        margin: 20px auto 0;
         display: block;
     }
 
     button[type="submit"]:hover {
-        background-color: #0c3214; /* Change the background color on hover */
+        background-color: #0c3214;
     }
 
     #file-warning {
@@ -88,12 +80,11 @@
         display: none;
     }
 
-    /* === Home and Files Buttons === */
     .nav-buttons {
         display: flex;
         justify-content: space-between;
         margin-top: 20px;
-        align-items: center; /* Align buttons vertically in the center */
+        align-items: center;
     }
 
     .nav-buttons button {
@@ -101,29 +92,28 @@
         background-color: #6d992e;
         color: white;
         border: none;
-        padding: 12px 30px; /* Increased padding for better button size */
+        padding: 12px 30px;
         border-radius: 5px;
-        font-size: 18px; /* Increased font size for better readability */
+        font-size: 18px;
         cursor: pointer;
         transition: background-color 0.3s ease;
-        margin: 0 20px; /* Adjusted margin for spacing */
+        margin: 0 20px;
         display: inline-block;
     }
 
     .nav-buttons button:hover {
-        background-color: #0c3214; /* Change the background color on hover */
+        background-color: #0c3214;
     }
 
 
-    /* === Progress Bar === */
     #progress-container {
         display: none;
         align-items: center;
         width: 100%;
         background-color: #e6f5e9;
-        height: 30px; /* Set the height of the progress bar */
+        height: 30px;
         border-radius: 5px;
-        flex-direction: column; /* Adjusted for vertical alignment */
+        flex-direction: column;
     }
 
     #progress-bar {
@@ -135,7 +125,7 @@
     }
 
     #progress-text {
-        margin-top: 5px; /* Adjusted margin for spacing */
+        margin-top: 5px;
         font-size: 14px;
         color: #6d992e;
     }
@@ -147,12 +137,14 @@
             {% csrf_token %}
             <div class="upload">
                 <label for="file-input">
-                    <p id="file-label">Select your file <span class="upload__button">Browse</span></p>
+                    <p id="file-label">Select your files </p>
                 </label>
-                <input type="file" id="file-input" name="file" style="display: none;">
+                <input type="file" id="file-input" name="file" multiple style="display: none;">
+            </div>
+            <div id="file-queue" class="file-queue">
             </div>
             <button type="submit">Upload</button>
-            <p id="file-warning">Please select a file to upload.</p>
+            <p id="file-warning">Please select one or more files to upload.</p>
         </form>
         <div class="nav-buttons" id="nav-buttons">
             <button type="button" onclick="window.location.href='/'"><i class="fas fa-home fa-xs"></i> Home</button>
@@ -165,54 +157,84 @@
     </div>
 </div>
 <script>
-    document.getElementById('file-input').addEventListener('change', function () {
-        // Show the selected file name and hide the "Select your file or Browse" text
-        let fileName = this.files[0].name;
-        let fileLabel = document.getElementById('file-label');
-        fileLabel.innerHTML = fileName;
-    });
+    let fileQueue = [];
 
+    function addFileToQueue(file) {
+        let fileQueueContainer = document.getElementById('file-queue');
+        let fileItem = document.createElement('div');
+        fileItem.classList.add('file-item');
+        fileItem.innerHTML = `
+        <span>${file.name}</span>
+        <i class="fas fa-times remove-file" data-file="${file.name}"></i>
+    `;
+        fileItem.querySelector('.remove-file').addEventListener('click', function () {
+            let fileName = this.getAttribute('data-file');
+            fileQueue = fileQueue.filter(file => file.name !== fileName);
+            fileQueueContainer.removeChild(fileItem);
+        });
+        fileQueue.push(file);
+        fileQueueContainer.appendChild(fileItem);
+    }
+
+    document.getElementById('file-input').addEventListener('change', function () {
+        let selectedFiles = this.files;
+        let fileLabel = document.getElementById('file-label');
+        Array.from(selectedFiles).forEach(file => {
+            addFileToQueue(file);
+        });
+        fileLabel.innerHTML = fileQueue.length > 0 ? 'Select more files' : 'Select your files';
+    });
+    document.addEventListener('mouseover', function (event) {
+        if (event.target && event.target.classList.contains('remove-file')) {
+            event.target.style.cursor = 'pointer';
+        }
+    });
     document.getElementById('upload-form').addEventListener('submit', function (event) {
         event.preventDefault();
-
-        let fileInput = document.getElementById('file-input');
         let fileWarning = document.getElementById('file-warning');
         let progressContainer = document.getElementById('progress-container');
-        let navButtons = document.getElementById('nav-buttons'); // Select the nav-buttons container
-
-        if (fileInput.files.length === 0) {
-            // Display a warning message if no file is selected
+        let navButtons = document.getElementById('nav-buttons');
+        if (fileQueue.length === 0) {
             fileWarning.style.display = 'block';
             return;
         }
-
         let formData = new FormData(this);
-        let xhr = new XMLHttpRequest();
-
-        xhr.upload.addEventListener('progress', function (e) {
-            if (e.lengthComputable) {
-                let percentage = Math.round((e.loaded / e.total) * 100);
-                document.getElementById('progress-bar').style.width = percentage + '%';
-                document.getElementById('progress-text').innerText = percentage + '%';
-
-                // Show the progress bar container when the upload starts
-                progressContainer.style.display = 'flex';
-
-                // Hide the Home and Files buttons while uploading
-                navButtons.style.display = 'none';
-            }
+        let uploadPromises = [];
+        fileQueue.forEach(file => {
+            let fileFormData = new FormData();
+            fileFormData.append('file', file);
+            fileFormData.append('csrfmiddlewaretoken', formData.get('csrfmiddlewaretoken'));
+            let fileXhr = new XMLHttpRequest();
+            let uploadPromise = new Promise((resolve, reject) => {
+                fileXhr.upload.addEventListener('progress', function (e) {
+                    if (e.lengthComputable) {
+                        let percentage = Math.round((e.loaded / e.total) * 100);
+                        document.getElementById('progress-bar').style.width = percentage + '%';
+                        document.getElementById('progress-text').innerText = percentage + '%';
+                        progressContainer.style.display = 'flex';
+                        navButtons.style.display = 'none';
+                    }
+                });
+                fileXhr.onload = function () {
+                    if (fileXhr.status === 201) {
+                        resolve();
+                    } else {
+                        reject(new Error('File upload failed'));  // Reject the promise on upload failure
+                    }
+                };
+                fileXhr.open('POST', this.action, true);
+                fileXhr.send(fileFormData);
+            });
+            uploadPromises.push(uploadPromise);
         });
-
-        xhr.onload = function () {
-            if (xhr.status === 201) {  // Assuming you return a 201 Created status on successful upload
+        Promise.all(uploadPromises)
+            .then(() => {
                 window.location.href = '/upload/success/';
-            }
-        };
-
-        xhr.open('POST', this.action, true);
-        xhr.send(formData);
-
-        // Show the progress bar and hide the upload button and warning
+            })
+            .catch(error => {
+                console.error(error);
+                alert('File upload failed.');
+            });
         document.getElementById('upload-form').style.display = 'none';
         document.getElementById('file-warning').style.display = 'none';
     });
