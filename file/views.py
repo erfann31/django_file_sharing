@@ -54,4 +54,7 @@ def download_file(request, filename):
 
 
 def home(request):
-    return render(request, 'file/home.html')
+    ip = os.environ.get('SERVER_IP', '127.0.0.1')
+    port = os.environ.get('SERVER_PORT', '8000')
+    server_url = f"http://{ip}:{port}"
+    return render(request, 'file/home.html', {'server_url': server_url})

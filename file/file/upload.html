@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=0.7, user-scalable=yes">
+    <link href="https://fonts.googleapis.com/css?family=Nunito+Sans:400,400i,700,900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <title>Upload</title>
+</head>
+<title>File Upload</title>
+<style>
+
+    #FileUpload {
+        display: flex;
+        justify-content: center;
+    }
+
+    .remove-file {
+        color: crimson;
+    }
+
+    body {
+        background-color: whitesmoke;
+        background-image: url("https://www.transparenttextures.com/patterns/lyonnette.png");
+        border-bottom: 0 solid black;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0;
+    }
+
+    .wrapper {
+        position: relative;
+        margin: 30px;
+        padding: 10px;
+        box-shadow: 0 19px 38px rgba(0, 0, 0, 0.30), 0 15px 12px rgba(0, 0, 0, 0.22);
+        border-radius: 10px;
+        background-color: whitesmoke;
+        max-width: 415px;
+        width: 90%;
+    }
+
+    .upload {
+        margin: 10px;
+        height: 85px;
+        border: 8px dashed #e6f5e9;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 5px;
+    }
+
+
+    .upload p {
+        margin-top: 12px;
+        line-height: 0;
+        font-size: 22px;
+        color: #6d992e;
+        letter-spacing: 1.5px;
+    }
+
+
+    #file-label {
+        display: inline-block;
+    }
+
+    button[type="button"] {
+        background-color: #6d992e;
+        color: whitesmoke;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        margin: 20px auto 0;
+        display: block;
+    }
+
+    button[type="button"]:hover {
+        background-color: #0c3214;
+    }
+
+    #file-warning {
+        color: red;
+        display: none;
+    }
+
+    .nav-buttons {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 20px;
+        align-items: center;
+    }
+
+    .nav-buttons button {
+        width: 150px;
+        background-color: #6d992e;
+        color: whitesmoke;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 5px;
+        font-size: 18px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        margin: 0 20px;
+        display: inline-block;
+    }
+
+    .nav-buttons button:hover {
+        background-color: #0c3214;
+    }
+
+
+    #progress-container {
+        display: none;
+        width: 100%;
+        align-items: center;
+
+        flex-direction: column;
+    }
+
+    #overall-progress-bar {
+        height: 15px;
+        width: 100%;
+        background-color: #6d992e;
+        border-radius: 5px;
+    }
+
+    #overall-progress-text {
+        margin-top: 5px;
+        font-size: 14px;
+        color: #6d992e;
+        font-weight: bold;
+    }
+</style>
+<body>
+<div id="FileUpload">
+    <div class="wrapper">
+        <form id="upload-form" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="upload">
+                <label for="file-input">
+                    <p id="file-label">Select your files </p>
+                </label>
+                <input type="file" id="file-input" name="file" multiple style="display: none;">
+            </div>
+            <div id="file-queue" class="file-queue">
+            </div>
+            <button type="button" id="upload-button">Upload</button> <!-- Use type="button" to prevent form submission -->
+            <button type="button" id="cancel-button" style="display: none;">Cancel All</button>
+            <p id="file-warning" style="display: none; ">Please select one or more files to upload.</p>
+        </form>
+        <div class="nav-buttons" id="nav-buttons">
+            <button type="button" onclick="window.location.href='/'"><i class="fas fa-home fa-xs"></i> Home</button>
+            <button type="button" onclick="window.location.href='/file-list'"><i class="fas fa-file fa-xs"></i> Files</button>
+        </div>
+        <div id="progress-container" style="display: none; margin-top: 20px">
+            <div id="overall-progress-bar"></div>
+            <div id="overall-progress-text">0%</div>
+        </div>
+    </div>
+</div>
+<script>
+    let fileQueue = [];
+    let uploadInProgress = false; // Flag to prevent multiple uploads
+    let xhr; // Reference to the XMLHttpRequest object
+    let uploadedFileCount = 0;
+
+    function addFileToQueue(file) {
+        let fileQueueContainer = document.getElementById('file-queue');
+        let fileItem = document.createElement('div');
+        fileItem.classList.add('file-item');
+        fileItem.innerHTML = `
+        <span>${file.name}</span>
+        <div class="progress-container">
+            <div class="progress-bar"></div>
+            <div class="progress-text">0%</div>
+        </div>
+        <i class="fas fa-times remove-file" data-file="${file.name}"></i>
+    `;
+        let progressBar = fileItem.querySelector('.progress-bar');
+        let progressText = fileItem.querySelector('.progress-text');
+        let removeButton = fileItem.querySelector('.remove-file');
+
+        removeButton.addEventListener('click', function () {
+            let fileName = this.getAttribute('data-file');
+            // Remove the file from the queue
+            fileQueue = fileQueue.filter(fileInfo => fileInfo.file.name !== fileName);
+            // Remove the file item from the DOM
+            fileQueueContainer.removeChild(fileItem);
+        });
+
+        if (uploadInProgress) {
+            // If upload is in progress, hide the remove button
+            removeButton.style.display = 'none';
+        } else {
+            removeButton.style.display = 'block';
+        }
+
+        fileQueue.push({file, progressBar, progressText, removeButton});
+        fileQueueContainer.appendChild(fileItem);
+    }
+
+    document.getElementById('file-input').addEventListener('change', function () {
+        let selectedFiles = this.files;
+        let fileLabel = document.getElementById('file-label');
+        Array.from(selectedFiles).forEach(file => {
+            addFileToQueue(file);
+        });
+        fileLabel.innerHTML = fileQueue.length > 0 ? 'Select more files' : 'Select your files';
+    });
+
+    document.getElementById('upload-button').addEventListener('click', function () {
+        if (uploadInProgress) {
+            return; // Don't start a new upload if one is in progress
+        }
+        let fileWarning = document.getElementById('file-warning');
+        let progressContainer = document.getElementById('progress-container');
+        let overallProgressBar = document.getElementById('overall-progress-bar');
+        let overallProgressText = document.getElementById('overall-progress-text');
+        let cancelButton = document.getElementById('cancel-button');
+
+        if (fileQueue.length === 0) {
+            fileWarning.style.display = 'block';
+            return;
+        }
+
+        // Hide remove buttons when upload is in progress
+        fileQueue.forEach(fileInfo => {
+            fileInfo.removeButton.style.display = 'none';
+        });
+
+        // Reset progress indicators
+        overallProgressBar.style.width = '0%';
+        overallProgressText.innerText = '0%';
+
+        // Show cancel button
+        cancelButton.style.display = 'block';
+
+        // Start uploading files
+        uploadInProgress = true;
+
+        // Helper function to update overall progress
+        function updateOverallProgress() {
+            let totalProgress = 0;
+            fileQueue.forEach(fileInfo => {
+                totalProgress += parseInt(fileInfo.progressText.innerText);
+            });
+            let overallPercentage = Math.round(totalProgress / fileQueue.length);
+            overallProgressBar.style.width = overallPercentage + '%';
+            overallProgressText.innerText = overallPercentage + '%';
+        }
+
+        // Upload each file sequentially
+        function uploadFile(index) {
+            if (index >= fileQueue.length || !uploadInProgress) {
+                // All files uploaded or upload canceled
+                uploadInProgress = false;
+                cancelButton.style.display = 'none';
+                if (!uploadInProgress) {
+                    // If canceled, reset the file queue and progress
+                    fileQueue = [];
+                    document.getElementById('file-queue').innerHTML = '';
+                    document.getElementById('file-label').innerText = 'Select your files';
+                    document.getElementById('file-warning').style.display = 'none';
+                    document.getElementById('progress-container').style.display = 'none';
+                    document.getElementById('nav-buttons').style.display = 'flex';
+                    document.getElementById('upload-button').style.display = 'block';
+                    xhr.abort(); // Abort the ongoing upload request
+
+                    // Check if this is the last file and navigate to http://127.0.0.1:8080/upload/success
+                    if (uploadedFileCount === fileQueue.length) {
+                        window.location.href = 'http://127.0.0.1:8080/upload/success';
+                    }
+                }
+                return;
+            }
+            let fileInfo = fileQueue[index];
+            let file = fileInfo.file;
+            let progressBar = fileInfo.progressBar;
+            let progressText = fileInfo.progressText;
+
+            let formData = new FormData();
+            formData.append('file', file);
+            formData.append('csrfmiddlewaretoken', document.getElementsByName('csrfmiddlewaretoken')[0].value);
+
+            xhr = new XMLHttpRequest(); // Assign the XMLHttpRequest object to the global variable
+
+            xhr.upload.addEventListener('progress', function (e) {
+                if (e.lengthComputable) {
+                    let percentage = Math.round((e.loaded / e.total) * 100);
+                    progressBar.style.width = percentage + '%';
+                    progressText.innerText = percentage + '%';
+                    updateOverallProgress();
+                }
+            });
+
+            xhr.onload = function () {
+                if (xhr.status === 201) {
+                    // Increment the uploaded file count
+                    uploadedFileCount++;
+                    if (uploadedFileCount === fileQueue.length) {
+                        window.location.href = "{% url 'file_upload_success' %}";
+                    }
+                    uploadFile(index + 1); // Upload next file
+                } else {
+                    console.error('File upload failed');
+                    alert('File upload failed.');
+                    uploadInProgress = false;
+                    cancelButton.style.display = 'none';
+                }
+            };
+
+            xhr.open('POST', document.getElementById('upload-form').action, true);
+            xhr.send(formData);
+        }
+
+        uploadedFileCount = 0; // Reset the uploaded file count
+        uploadFile(0);
+        document.getElementById('nav-buttons').style.display = 'none';
+        document.getElementById('upload-button').style.display = 'none';
+        progressContainer.style.display = 'flex';
+    });
+
+
+    document.getElementById('cancel-button').addEventListener('click', function () {
+        // Cancel all uploads
+        uploadInProgress = false;
+        xhr.abort();
+        fileQueue = [];
+        document.getElementById('file-queue').innerHTML = '';
+        document.getElementById('file-label').innerText = 'Select your files';
+        document.getElementById('file-warning').style.display = 'none';
+        document.getElementById('progress-container').style.display = 'none';
+        document.getElementById('nav-buttons').style.display = 'flex';
+        document.getElementById('upload-button').style.display = 'block';
+        document.getElementById('cancel-button').style.display = 'none';// Abort the ongoing upload request
+    });
+</script>
+</body>
+</html>

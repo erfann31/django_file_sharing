@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="text-center">
+    <form id="upload-form" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="upload-area p-4 mb-4 border border-2 border-secondary rounded">
+            <label for="file-input" class="cursor-pointer">
+                <i class="fas fa-cloud-upload-alt fa-3x mb-3" style="color: #6d992e"></i>
+                <p id="file-label" class="mb-0">Select your files</p>
+            </label>
+            <input type="file" id="file-input" name="file" multiple class="d-none">
+        </div>
+
+        <div id="file-queue" class="mb-3"></div>
+
+        <button type="button" id="upload-button" class="btn btn-primary mb-3">
+            <i class="fas fa-upload me-2"></i>Upload
+        </button>
+        <button type="button" id="cancel-button" class="btn btn-danger mb-3 d-none">
+            <i class="fas fa-times me-2"></i>Cancel
+        </button>
+
+        <div id="progress-container" class="d-none">
+            <div class="progress mb-2">
+                <div id="overall-progress-bar" class="progress-bar" role="progressbar"></div>
+            </div>
+            <div id="overall-progress-text" class="text-muted">0%</div>
+        </div>
+
+        <p id="file-warning" class="text-danger d-none">Please select one or more files to upload.</p>
+    </form>
+
+    <div id="nav-buttons" class="d-flex justify-content-center gap-3 mt-4">
+        <button class="btn btn-primary" onclick="window.location.href='/'">
+            <i class="fas fa-home me-2"></i>Home
+        </button>
+        <button class="btn btn-primary" onclick="window.location.href='/file-list'">
+            <i class="fas fa-file me-2"></i>Files
+        </button>
+    </div>
+</div>
+
+<script>
+   let fileQueue = [];
+    let uploadInProgress = false; // Flag to prevent multiple uploads
+    let xhr; // Reference to the XMLHttpRequest object
+    let uploadedFileCount = 0;
+
+    function addFileToQueue(file) {
+        let fileQueueContainer = document.getElementById('file-queue');
+        let fileItem = document.createElement('div');
+        fileItem.classList.add('file-item');
+        fileItem.innerHTML = `
+        <span>${file.name}</span>
+        <div class="progress-container">
+            <div class="progress-bar"></div>
+            <div class="progress-text">0%</div>
+        </div>
+        <i class="fas fa-times remove-file" data-file="${file.name}"></i>
+    `;
+        let progressBar = fileItem.querySelector('.progress-bar');
+        let progressText = fileItem.querySelector('.progress-text');
+        let removeButton = fileItem.querySelector('.remove-file');
+
+        removeButton.addEventListener('click', function () {
+            let fileName = this.getAttribute('data-file');
+            // Remove the file from the queue
+            fileQueue = fileQueue.filter(fileInfo => fileInfo.file.name !== fileName);
+            // Remove the file item from the DOM
+            fileQueueContainer.removeChild(fileItem);
+        });
+
+        if (uploadInProgress) {
+            // If upload is in progress, hide the remove button
+            removeButton.style.display = 'none';
+        } else {
+            removeButton.style.display = 'block';
+        }
+
+        fileQueue.push({file, progressBar, progressText, removeButton});
+        fileQueueContainer.appendChild(fileItem);
+    }
+
+    document.getElementById('file-input').addEventListener('change', function () {
+        let selectedFiles = this.files;
+        let fileLabel = document.getElementById('file-label');
+        Array.from(selectedFiles).forEach(file => {
+            addFileToQueue(file);
+        });
+        fileLabel.innerHTML = fileQueue.length > 0 ? 'Select more files' : 'Select your files';
+    });
+
+    document.getElementById('upload-button').addEventListener('click', function () {
+        if (uploadInProgress) {
+            return; // Don't start a new upload if one is in progress
+        }
+        let fileWarning = document.getElementById('file-warning');
+        let progressContainer = document.getElementById('progress-container');
+        let overallProgressBar = document.getElementById('overall-progress-bar');
+        let overallProgressText = document.getElementById('overall-progress-text');
+        let cancelButton = document.getElementById('cancel-button');
+
+        if (fileQueue.length === 0) {
+            fileWarning.style.display = 'block';
+            return;
+        }
+
+        // Hide remove buttons when upload is in progress
+        fileQueue.forEach(fileInfo => {
+            fileInfo.removeButton.style.display = 'none';
+        });
+
+        // Reset progress indicators
+        overallProgressBar.style.width = '0%';
+        overallProgressText.innerText = '0%';
+
+        // Show cancel button
+        cancelButton.style.display = 'block';
+
+        // Start uploading files
+        uploadInProgress = true;
+
+        // Helper function to update overall progress
+        function updateOverallProgress() {
+            let totalProgress = 0;
+            fileQueue.forEach(fileInfo => {
+                totalProgress += parseInt(fileInfo.progressText.innerText);
+            });
+            let overallPercentage = Math.round(totalProgress / fileQueue.length);
+            overallProgressBar.style.width = overallPercentage + '%';
+            overallProgressText.innerText = overallPercentage + '%';
+        }
+
+        // Upload each file sequentially
+        function uploadFile(index) {
+            if (index >= fileQueue.length || !uploadInProgress) {
+                // All files uploaded or upload canceled
+                uploadInProgress = false;
+                cancelButton.style.display = 'none';
+                if (!uploadInProgress) {
+                    // If canceled, reset the file queue and progress
+                    fileQueue = [];
+                    document.getElementById('file-queue').innerHTML = '';
+                    document.getElementById('file-label').innerText = 'Select your files';
+                    document.getElementById('file-warning').style.display = 'none';
+                    document.getElementById('progress-container').style.display = 'none';
+                    document.getElementById('nav-buttons').style.display = 'flex';
+                    document.getElementById('upload-button').style.display = 'block';
+                    xhr.abort(); // Abort the ongoing upload request
+
+                    // Check if this is the last file and navigate to http://127.0.0.1:8080/upload/success
+                    if (uploadedFileCount === fileQueue.length) {
+                        window.location.href = 'http://127.0.0.1:8080/upload/success';
+                    }
+                }
+                return;
+            }
+            let fileInfo = fileQueue[index];
+            let file = fileInfo.file;
+            let progressBar = fileInfo.progressBar;
+            let progressText = fileInfo.progressText;
+
+            let formData = new FormData();
+            formData.append('file', file);
+            formData.append('csrfmiddlewaretoken', document.getElementsByName('csrfmiddlewaretoken')[0].value);
+
+            xhr = new XMLHttpRequest(); // Assign the XMLHttpRequest object to the global variable
+
+            xhr.upload.addEventListener('progress', function (e) {
+                if (e.lengthComputable) {
+                    let percentage = Math.round((e.loaded / e.total) * 100);
+                    progressBar.style.width = percentage + '%';
+                    progressText.innerText = percentage + '%';
+                    updateOverallProgress();
+                }
+            });
+
+            xhr.onload = function () {
+                if (xhr.status === 201) {
+                    // Increment the uploaded file count
+                    uploadedFileCount++;
+                    if (uploadedFileCount === fileQueue.length) {
+                        window.location.href = "{% url 'file_upload_success' %}";
+                    }
+                    uploadFile(index + 1); // Upload next file
+                } else {
+                    console.error('File upload failed');
+                    alert('File upload failed.');
+                    uploadInProgress = false;
+                    cancelButton.style.display = 'none';
+                }
+            };
+
+            xhr.open('POST', document.getElementById('upload-form').action, true);
+            xhr.send(formData);
+        }
+
+        uploadedFileCount = 0; // Reset the uploaded file count
+        uploadFile(0);
+        document.getElementById('nav-buttons').style.display = 'none';
+        document.getElementById('upload-button').style.display = 'none';
+        progressContainer.style.display = 'flex';
+    });
+
+
+    document.getElementById('cancel-button').addEventListener('click', function () {
+        // Cancel all uploads
+        uploadInProgress = false;
+        xhr.abort();
+        fileQueue = [];
+        document.getElementById('file-queue').innerHTML = '';
+        document.getElementById('file-label').innerText = 'Select your files';
+        document.getElementById('file-warning').style.display = 'none';
+        document.getElementById('progress-container').style.display = 'none';
+        document.getElementById('nav-buttons').style.display = 'flex';
+        document.getElementById('upload-button').style.display = 'block';
+        document.getElementById('cancel-button').style.display = 'none';// Abort the ongoing upload request
+    });</script>
+{% endblock %}

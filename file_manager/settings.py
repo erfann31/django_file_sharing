@@ -3,7 +3,6 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
 SECRET_KEY = 'django-insecure-58*ae*cje4z*im2-&2@v@k+2(mr0(@o$0ve6%2lhnn$arb@%a@'
 
@@ -38,8 +37,10 @@ ROOT_URLCONF = 'file_manager.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates']
-        ,
+        'DIRS': [
+            BASE_DIR / 'templates',
+            BASE_DIR / 'file' / 'templates',
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -51,6 +52,11 @@ TEMPLATES = [
         },
     },
 ]
+
+# Add this to help PyInstaller find the templates
+import sys
+if getattr(sys, 'frozen', False):
+    TEMPLATE_DIRS = [os.path.join(sys._MEIPASS, 'templates')]
 
 WSGI_APPLICATION = 'file_manager.wsgi.application'
 
@@ -87,4 +93,4 @@ USE_I18N = True
 
 USE_TZ = True
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')

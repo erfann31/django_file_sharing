@@ -1,167 +1,48 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta name="viewport" content="width=device-width, initial-scale=0.7, user-scalable=yes">
-    <link href="https://fonts.googleapis.com/css?family=Nunito+Sans:400,400i,700,900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <title>Upload</title>
-</head>
-<title>File Upload</title>
-<style>
+{% extends "base.html" %}
 
-    #FileUpload {
-        display: flex;
-        justify-content: center;
-    }
-
-    .remove-file {
-        color: crimson;
-    }
-
-    body {
-        background-color: whitesmoke;
-        background-image: url("https://www.transparenttextures.com/patterns/lyonnette.png");
-        border-bottom: 0 solid black;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin: 0;
-    }
-
-    .wrapper {
-        position: relative;
-        margin: 30px;
-        padding: 10px;
-        box-shadow: 0 19px 38px rgba(0, 0, 0, 0.30), 0 15px 12px rgba(0, 0, 0, 0.22);
-        border-radius: 10px;
-        background-color: whitesmoke;
-        max-width: 415px;
-        width: 90%;
-    }
-
-    .upload {
-        margin: 10px;
-        height: 85px;
-        border: 8px dashed #e6f5e9;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        border-radius: 5px;
-    }
-
-
-    .upload p {
-        margin-top: 12px;
-        line-height: 0;
-        font-size: 22px;
-        color: #6d992e;
-        letter-spacing: 1.5px;
-    }
-
-
-    #file-label {
-        display: inline-block;
-    }
-
-    button[type="button"] {
-        background-color: #6d992e;
-        color: whitesmoke;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 5px;
-        font-size: 16px;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-        margin: 20px auto 0;
-        display: block;
-    }
-
-    button[type="button"]:hover {
-        background-color: #0c3214;
-    }
-
-    #file-warning {
-        color: red;
-        display: none;
-    }
-
-    .nav-buttons {
-        display: flex;
-        justify-content: space-between;
-        margin-top: 20px;
-        align-items: center;
-    }
-
-    .nav-buttons button {
-        width: 150px;
-        background-color: #6d992e;
-        color: whitesmoke;
-        border: none;
-        padding: 12px 30px;
-        border-radius: 5px;
-        font-size: 18px;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-        margin: 0 20px;
-        display: inline-block;
-    }
-
-    .nav-buttons button:hover {
-        background-color: #0c3214;
-    }
-
-
-    #progress-container {
-        display: none;
-        width: 100%;
-        align-items: center;
-
-        flex-direction: column;
-    }
-
-    #overall-progress-bar {
-        height: 15px;
-        width: 100%;
-        background-color: #6d992e;
-        border-radius: 5px;
-    }
-
-    #overall-progress-text {
-        margin-top: 5px;
-        font-size: 14px;
-        color: #6d992e;
-        font-weight: bold;
-    }
-</style>
-<body>
-<div id="FileUpload">
-    <div class="wrapper">
-        <form id="upload-form" method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            <div class="upload">
-                <label for="file-input">
-                    <p id="file-label">Select your files </p>
-                </label>
-                <input type="file" id="file-input" name="file" multiple style="display: none;">
-            </div>
-            <div id="file-queue" class="file-queue">
-            </div>
-            <button type="button" id="upload-button">Upload</button> <!-- Use type="button" to prevent form submission -->
-            <button type="button" id="cancel-button" style="display: none;">Cancel All</button>
-            <p id="file-warning" style="display: none; ">Please select one or more files to upload.</p>
-        </form>
-        <div class="nav-buttons" id="nav-buttons">
-            <button type="button" onclick="window.location.href='/'"><i class="fas fa-home fa-xs"></i> Home</button>
-            <button type="button" onclick="window.location.href='/file-list'"><i class="fas fa-file fa-xs"></i> Files</button>
+{% block content %}
+<div class="text-center">
+    <form id="upload-form" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="upload-area p-4 mb-4 border border-2 border-secondary rounded">
+            <label for="file-input" class="cursor-pointer">
+                <i class="fas fa-cloud-upload-alt fa-3x mb-3" style="color: #6d992e"></i>
+                <p id="file-label" class="mb-0">Select your files</p>
+            </label>
+            <input type="file" id="file-input" name="file" multiple class="d-none">
         </div>
-        <div id="progress-container" style="display: none; margin-top: 20px">
-            <div id="overall-progress-bar"></div>
-            <div id="overall-progress-text">0%</div>
+
+        <div id="file-queue" class="mb-3"></div>
+
+        <button type="button" id="upload-button" class="btn btn-primary mb-3">
+            <i class="fas fa-upload me-2"></i>Upload
+        </button>
+        <button type="button" id="cancel-button" class="btn btn-danger mb-3 d-none">
+            <i class="fas fa-times me-2"></i>Cancel
+        </button>
+
+        <div id="progress-container" class="d-none">
+            <div class="progress mb-2">
+                <div id="overall-progress-bar" class="progress-bar" role="progressbar"></div>
+            </div>
+            <div id="overall-progress-text" class="text-muted">0%</div>
         </div>
+
+        <p id="file-warning" class="text-danger d-none">Please select one or more files to upload.</p>
+    </form>
+
+    <div id="nav-buttons" class="d-flex justify-content-center gap-3 mt-4">
+        <button class="btn btn-primary" onclick="window.location.href='/'">
+            <i class="fas fa-home me-2"></i>Home
+        </button>
+        <button class="btn btn-primary" onclick="window.location.href='/file-list'">
+            <i class="fas fa-file me-2"></i>Files
+        </button>
     </div>
 </div>
+
 <script>
-    let fileQueue = [];
+   let fileQueue = [];
     let uploadInProgress = false; // Flag to prevent multiple uploads
     let xhr; // Reference to the XMLHttpRequest object
     let uploadedFileCount = 0;
@@ -335,7 +216,5 @@
         document.getElementById('nav-buttons').style.display = 'flex';
         document.getElementById('upload-button').style.display = 'block';
         document.getElementById('cancel-button').style.display = 'none';// Abort the ongoing upload request
-    });
-</script>
-</body>
-</html>
+    });</script>
+{% endblock %}

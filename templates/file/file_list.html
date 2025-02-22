@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="text-center">
+    <div class="icon-circle mb-4">
+        <i class="fas fa-file-download"></i>
+    </div>
+    <h2 class="mb-4">Uploaded Files</h2>
+    <ul class="file-list text-start mb-4">
+        {% for filename in files %}
+            <li>
+                <a href="{% url 'download_file' filename %}">
+                    <i class="fas fa-download me-2"></i>{{ filename }}
+                </a>
+            </li>
+        {% empty %}
+            <li class="text-center text-muted">No files uploaded.</li>
+        {% endfor %}
+    </ul>
+    <div class="d-flex justify-content-center gap-3">
+        <button class="btn btn-primary" onclick="window.location.href='/upload'">
+            <i class="fas fa-upload me-2"></i>Upload
+        </button>
+        <button class="btn btn-primary" onclick="window.location.href='/'">
+            <i class="fas fa-home me-2"></i>Home
+        </button>
+    </div>
+</div>
+{% endblock %}

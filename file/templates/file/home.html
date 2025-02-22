@@ -1,105 +1,34 @@
-{% load static %}
-<!DOCTYPE html>
-<html>
-<head>
-    <meta name="viewport" content="width=device-width, initial-scale=0.5, user-scalable=yes">
-    <link href="https://fonts.googleapis.com/css?family=Nunito+Sans:400,400i,700,900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <title>Home</title>
-</head>
-<style>
-    body {
-        text-align: center;
-        padding: 60px 0;
-        background-color: whitesmoke;
-        background-image: url("https://www.transparenttextures.com/patterns/lyonnette.png");
-        border-bottom: 0 solid black;
-        height: 450px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
+{% extends "base.html" %}
+{% block extra_head %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+{% endblock %}
 
-    h1 {
-        color: #6d992e;
-        font-family: "Nunito Sans", "Helvetica Neue", sans-serif;
-        font-weight: 900;
-        font-size: 40px;
-        margin-bottom: 20px; /* Increased margin for spacing */
-    }
-
-    p {
-        color: #404F5E;
-        font-family: "Nunito Sans", "Helvetica Neue", sans-serif;
-        font-size: 20px;
-        margin: 0;
-    }
-
-    .django-logo {
-        width: 50%;
-        margin-left: -15px;
-    }
-
-    .card {
-        background: whitesmoke;
-        padding: 60px;
-        border-radius: 4px;
-        box-shadow: 0 2px 3px #C8D0D8;
-        display: inline-block;
-        margin: 0 auto;
-    }
-
-    .upload-buttons {
-        text-align: center;
-        margin-top: 30px;
-    }
-
-    button[type="submit"] {
-        width: 150px;
-        background-color: #6d992e;
-        color: whitesmoke;
-        border: none;
-        padding: 12px 30px;
-        border-radius: 5px;
-        font-size: 18px;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-        margin: 0 20px;
-        display: inline-block;
-    }
-
-    button[type="submit"]:hover {
-        background-color: #0c3214;
-    }
-
-    .fas.fa-xs {
-        margin-right: 5px;
-        margin-top: 12px;
-        font-size: 18px;
-    }
-
-    .center-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        border-radius: 50%;
-        height: 200px;
-        width: 200px;
-        background: #F8FAF5;
-        margin: 0 auto;
-    }
-</style>
-<body>
-<div class="card">
-    <div class="center-container">
-        <img src="{% static 'svgs/django.svg' %}" alt="" class="django-logo">
+{% block content %}
+<div class="text-center">
+    <div class="icon-circle mb-4">
+        <i class="fas fa-share-alt"></i>
     </div>
-    <h1>Django File Management</h1>
-    <div class="upload-buttons">
-        <button type="submit" onclick="window.location.href='/upload'"><i class="fas fa-upload fa-xs"></i> Upload</button>
-        <button type="submit" onclick="window.location.href='/file-list'"><i class="fas fa-file fa-xs"></i> Files</button>
+    <h2 class="mb-4">File Sharing</h2>
+    <div class="server-url">{{ server_url }}</div>
+    <div id="qrcode" class="mb-4"></div>
+    <div class="d-flex justify-content-center gap-3">
+        <button class="btn btn-primary" onclick="window.location.href='/upload'">
+            <i class="fas fa-upload me-2"></i>Upload
+        </button>
+        <button class="btn btn-primary" onclick="window.location.href='/file-list'">
+            <i class="fas fa-file me-2"></i>Files
+        </button>
     </div>
-    <p class="introduction" style="margin-top: 20px; cursor: pointer;" onclick="window.location.href='https://github.com/erfann31'">Click here to visit my GitHub profile</p>
 </div>
-</body>
-</html>
+
+<script>
+    var qrcode = new QRCode(document.getElementById("qrcode"), {
+        text: "{{ server_url }}",
+        width: 180,
+        height: 180,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+    });
+</script>
+{% endblock %}
