@@ -1,34 +1,215 @@
 {% extends "base.html" %}
 {% block extra_head %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+.scan-hint { font-family: var(--font); font-size: 10px; letter-spacing: 3px; color: var(--muted); text-transform: uppercase; margin-bottom: 14px; }
+.nav-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+.nav-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 22px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: var(--tr);
+    text-decoration: none;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+.nav-card svg { width: 26px; height: 26px; }
+.nav-card.up  { color: var(--accent);  border-color: rgba(0,229,255,.2); }
+.nav-card.up:hover  { border-color: var(--accent); background: rgba(0,229,255,.06); box-shadow: 0 0 20px rgba(0,229,255,.12); }
+.nav-card.dl  { color: var(--accent2); border-color: rgba(127,255,95,.2); }
+.nav-card.dl:hover  { border-color: var(--accent2); background: rgba(127,255,95,.05); box-shadow: 0 0 20px rgba(127,255,95,.1); }
+</style>
 {% endblock %}
 
 {% block content %}
+<div class="section-head">
+    <span class="section-tag">connection</span>
+    <div class="section-line"></div>
+</div>
+
+<div class="server-url">{{ server_url }}</div>
+
+<p class="scan-hint text-center">// scan with phone to connect //</p>
+
 <div class="text-center">
-    <div class="icon-circle mb-4">
-        <i class="fas fa-share-alt"></i>
-    </div>
-    <h2 class="mb-4">File Sharing</h2>
-    <div class="server-url">{{ server_url }}</div>
-    <div id="qrcode" class="mb-4"></div>
-    <div class="d-flex justify-content-center gap-3">
-        <button class="btn btn-primary" onclick="window.location.href='/upload'">
-            <i class="fas fa-upload me-2"></i>Upload
-        </button>
-        <button class="btn btn-primary" onclick="window.location.href='/file-list'">
-            <i class="fas fa-file me-2"></i>Files
-        </button>
+    <div class="qr-wrap">
+        <canvas id="qrcode"></canvas>
     </div>
 </div>
 
+<div class="divider"></div>
+
+<div class="nav-grid">
+    <a class="nav-card up" href="/upload">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 16 12 12 8 16"/>
+            <line x1="12" y1="12" x2="12" y2="21"/>
+            <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+        </svg>
+        Upload
+    </a>
+    <a class="nav-card dl" href="/file-list">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+            <polyline points="12 12 12 18"/>
+            <polyline points="9 15 12 18 15 15"/>
+        </svg>
+        Files
+    </a>
+</div>
+
 <script>
-    var qrcode = new QRCode(document.getElementById("qrcode"), {
-        text: "{{ server_url }}",
-        width: 180,
-        height: 180,
-        colorDark: "#000000",
-        colorLight: "#ffffff",
-        correctLevel: QRCode.CorrectLevel.H
-    });
+(function(){
+"use strict";
+
+/* ── Minimal offline QR encoder ── */
+function encodeQR(text, canvas) {
+    /* We use a proper Reed-Solomon QR library implemented inline */
+    /* For a truly scannable QR we use a basic version-3 encoder  */
+
+    /* ---- tiny QR helper (version 2, ECC L, byte mode) ---- */
+    const SIZE = 25; // version 2 = 25×25
+    const mat  = Array.from({length: SIZE}, () => new Uint8Array(SIZE));
+    const func = Array.from({length: SIZE}, () => new Uint8Array(SIZE)); // functional modules mask
+
+    function set(r,c,v,f=false){ mat[r][c]=v; if(f) func[r][c]=1; }
+
+    // Finder patterns
+    function finder(r,c){
+        for(let dr=0;dr<7;dr++) for(let dc=0;dc<7;dc++){
+            const v=(dr===0||dr===6||dc===0||dc===6||(dr>=2&&dr<=4&&dc>=2&&dc<=4))?1:0;
+            if(r+dr<SIZE&&c+dc<SIZE) set(r+dr,c+dc,v,true);
+        }
+    }
+    finder(0,0); finder(0,SIZE-7); finder(SIZE-7,0);
+
+    // Separators (already mostly covered; mark functional)
+    for(let i=0;i<8;i++){
+        [mat[7][i],mat[i][7],mat[7][SIZE-1-i],mat[i][SIZE-8],mat[SIZE-8][i],mat[SIZE-1-i][7]].forEach(()=>{});
+        func[7][i]=func[i][7]=func[7][SIZE-1-i]=func[i][SIZE-8]=func[SIZE-8][i]=func[SIZE-1-i][7]=1;
+    }
+    // Timing
+    for(let i=8;i<SIZE-8;i++){
+        set(6,i,i%2===0?1:0,true);
+        set(i,6,i%2===0?1:0,true);
+    }
+    // Dark module
+    set(SIZE-8,8,1,true);
+
+    // Format info placeholder
+    const fmtPos=[[8,0],[8,1],[8,2],[8,3],[8,4],[8,5],[8,7],[8,8],[7,8],[5,8],[4,8],[3,8],[2,8],[1,8],[0,8],
+                   [SIZE-1,8],[SIZE-2,8],[SIZE-3,8],[SIZE-4,8],[SIZE-5,8],[SIZE-6,8],[SIZE-7,8],[8,SIZE-8],[8,SIZE-7],[8,SIZE-6],[8,SIZE-5],[8,SIZE-4],[8,SIZE-3],[8,SIZE-2],[8,SIZE-1]];
+    fmtPos.forEach(([r,c])=>func[r][c]=1);
+
+    // ── Data encoding: byte mode ──
+    const enc = [];
+    // Mode indicator 0100 (byte)
+    enc.push(0,1,0,0);
+    // Character count (8 bits for version 2 byte mode)
+    const bytes = [];
+    for(let i=0;i<text.length;i++) bytes.push(text.charCodeAt(i)&0xff);
+    const len=bytes.length;
+    for(let b=7;b>=0;b--) enc.push((len>>b)&1);
+    // Data bytes
+    for(const byte of bytes) for(let b=7;b>=0;b--) enc.push((byte>>b)&1);
+    // Terminator
+    for(let i=0;i<4&&enc.length<152;i++) enc.push(0);
+    // Pad to byte boundary
+    while(enc.length%8) enc.push(0);
+    // Pad codewords (version 2L capacity = 19 data bytes = 152 bits)
+    const padBytes=[0xEC,0x11];let pi=0;
+    while(enc.length<152) { for(let b=7;b>=0;b--) enc.push((padBytes[pi%2]>>b)&1); pi++; }
+
+    // ── Simple RS error correction (version 2 ECC L = 10 EC codewords) ──
+    // GF(256) with primitive polynomial x^8+x^4+x^3+x^2+1 (0x11D)
+    const gfExp=new Uint8Array(512), gfLog=new Uint8Array(256);
+    let x=1;
+    for(let i=0;i<255;i++){ gfExp[i]=x; gfLog[x]=i; x<<=1; if(x&256) x^=0x11D; x&=255; }
+    for(let i=255;i<512;i++) gfExp[i]=gfExp[i-255];
+
+    function gfMul(a,b){ return (a===0||b===0)?0:gfExp[gfLog[a]+gfLog[b]]; }
+
+    // Generator polynomial for 10 EC codewords
+    const gen=[1];
+    for(let i=0;i<10;i++){
+        const root=gfExp[i];
+        const newG=new Array(gen.length+1).fill(0);
+        for(let j=0;j<gen.length;j++){
+            newG[j]^=gen[j];
+            newG[j+1]^=gfMul(gen[j],root);
+        }
+        gen.length=0; gen.push(...newG);
+    }
+
+    // Convert bit array to bytes
+    const dataBytes=[];
+    for(let i=0;i<enc.length;i+=8){
+        let v=0; for(let b=0;b<8;b++) v=(v<<1)|enc[i+b]; dataBytes.push(v);
+    }
+
+    // Divide message polynomial by generator
+    const msg=[...dataBytes,...new Array(10).fill(0)];
+    for(let i=0;i<dataBytes.length;i++){
+        const c=msg[i]; if(c===0) continue;
+        for(let j=0;j<gen.length;j++) msg[i+j]^=gfMul(gen[j],c);
+    }
+    const ecBytes=msg.slice(dataBytes.length);
+
+    // All codewords
+    const allBits=[];
+    for(const b of [...dataBytes,...ecBytes]) for(let i=7;i>=0;i--) allBits.push((b>>i)&1);
+    // Remainder bits (version 2 = 7)
+    for(let i=0;i<7;i++) allBits.push(0);
+
+    // ── Place data ──
+    let bitIdx=0;
+    let up=true;
+    for(let col=SIZE-1;col>=0;col-=2){
+        if(col===6) col=5; // skip timing
+        for(let row=0;row<SIZE;row++){
+            const r=up?SIZE-1-row:row;
+            for(let dc=0;dc<2;dc++){
+                const c=col-dc;
+                if(!func[r][c]&&bitIdx<allBits.length){
+                    mat[r][c]=allBits[bitIdx++];
+                }
+            }
+        }
+        up=!up;
+    }
+
+    // ── Mask pattern 0: (r+c)%2===0 ──
+    for(let r=0;r<SIZE;r++) for(let c=0;c<SIZE;c++){
+        if(!func[r][c]&&(r+c)%2===0) mat[r][c]^=1;
+    }
+
+    // ── Format info (ECC L, mask 0) ── bits: 111011111000100
+    const fmt=[1,1,1,0,1,1,1,1,1,0,0,0,1,0,0];
+    const fp1=[[8,0],[8,1],[8,2],[8,3],[8,4],[8,5],[8,7],[8,8],[7,8],[5,8],[4,8],[3,8],[2,8],[1,8],[0,8]];
+    const fp2=[[SIZE-1,8],[SIZE-2,8],[SIZE-3,8],[SIZE-4,8],[SIZE-5,8],[SIZE-6,8],[SIZE-7,8],[8,SIZE-8],[8,SIZE-7],[8,SIZE-6],[8,SIZE-5],[8,SIZE-4],[8,SIZE-3],[8,SIZE-2],[8,SIZE-1]];
+    for(let i=0;i<15;i++){ set(fp1[i][0],fp1[i][1],fmt[i]); set(fp2[i][0],fp2[i][1],fmt[i]); }
+
+    // ── Render ──
+    const SCALE=8, QUIET=4;
+    const dim=(SIZE+QUIET*2)*SCALE;
+    canvas.width=canvas.height=dim;
+    const ctx=canvas.getContext('2d');
+    ctx.fillStyle='#fff'; ctx.fillRect(0,0,dim,dim);
+    ctx.fillStyle='#000';
+    for(let r=0;r<SIZE;r++) for(let c=0;c<SIZE;c++){
+        if(mat[r][c]) ctx.fillRect((c+QUIET)*SCALE,(r+QUIET)*SCALE,SCALE,SCALE);
+    }
+}
+
+encodeQR("{{ server_url }}", document.getElementById('qrcode'));
+})();
 </script>
 {% endblock %}

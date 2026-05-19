@@ -1,29 +1,47 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="text-center">
-    <div class="icon-circle mb-4">
-        <i class="fas fa-file-download"></i>
-    </div>
-    <h2 class="mb-4">Uploaded Files</h2>
-    <ul class="file-list text-start mb-4">
-        {% for filename in files %}
-            <li>
-                <a href="{% url 'download_file' filename %}">
-                    <i class="fas fa-download me-2"></i>{{ filename }}
-                </a>
-            </li>
-        {% empty %}
-            <li class="text-center text-muted">No files uploaded.</li>
-        {% endfor %}
-    </ul>
-    <div class="d-flex justify-content-center gap-3">
-        <button class="btn btn-primary" onclick="window.location.href='/upload'">
-            <i class="fas fa-upload me-2"></i>Upload
-        </button>
-        <button class="btn btn-primary" onclick="window.location.href='/'">
-            <i class="fas fa-home me-2"></i>Home
-        </button>
-    </div>
+<div class="section-head">
+    <span class="section-tag">stored files</span>
+    <div class="section-line"></div>
+</div>
+
+<ul class="file-list mb-4">
+    {% for filename in files %}
+        <li>
+            <a href="{% url 'download_file' filename %}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                {{ filename }}
+            </a>
+        </li>
+    {% empty %}
+        <li class="text-center">
+            <span class="text-muted" style="font-family:var(--font);font-size:12px;letter-spacing:2px;">// NO FILES YET //</span>
+        </li>
+    {% endfor %}
+</ul>
+
+<div class="divider"></div>
+
+<div class="d-flex justify-content-center gap-3">
+    <a class="btn btn-primary" href="/upload">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 16 12 12 8 16"/>
+            <line x1="12" y1="12" x2="12" y2="21"/>
+            <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+        </svg>
+        Upload
+    </a>
+    <a class="btn btn-secondary" href="/">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+            <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        Home
+    </a>
 </div>
 {% endblock %}
