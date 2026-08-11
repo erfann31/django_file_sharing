@@ -46,7 +46,7 @@ jobs:
 
       - name: Build Linux executable
         if: runner.os == 'Linux'
-        run: ./build_linux.sh
+        run: bash build_linux.sh
 
       - name: Package Linux executable
         if: runner.os == 'Linux'
