@@ -2,14 +2,19 @@ import os
 import sys
 from pathlib import Path
 
-# PyInstaller extracts bundled files to a temporary directory.  Keep read-only
-# application assets there, but store uploads and the SQLite database in a
-# persistent, writable location.
+# PyInstaller extracts bundled files to a temporary directory. Keep read-only
+# application assets there, but save user files beside the executable so they
+# are easy to find on every supported operating system.
 if getattr(sys, 'frozen', False):
     BASE_DIR = Path(sys._MEIPASS)
-    _default_data_dir = Path(
-        os.environ.get('LOCALAPPDATA', Path.home() / 'AppData' / 'Local')
-    ) / 'LocalShare'
+    _executable = Path(sys.executable).resolve()
+    if sys.platform == 'darwin':
+        # The executable lives inside LocalShare.app/Contents/MacOS. Store
+        # files next to the app bundle, rather than inside it.
+        _app_bundle = next((parent for parent in _executable.parents if parent.suffix == '.app'), None)
+        _default_data_dir = _app_bundle.parent if _app_bundle else _executable.parent
+    else:
+        _default_data_dir = _executable.parent
 else:
     BASE_DIR = Path(__file__).resolve().parent.parent
     _default_data_dir = BASE_DIR
@@ -104,5 +109,10 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_ROOT = BASE_DIR / 'static'
-MEDIA_ROOT = DATA_DIR / 'media'
+# Uploaded files are placed directly in this visible folder:
+#   Windows/Linux: beside LocalShare.exe / LocalShare
+#   macOS: beside LocalShare.app
+#   Source checkout: beside manage.py
+MEDIA_ROOT = DATA_DIR / 'files'
+MEDIA_ROOT.mkdir(parents=True, exist_ok=True)
 MEDIA_URL = '/media/'

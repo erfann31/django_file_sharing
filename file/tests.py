@@ -17,12 +17,12 @@ class UploadFileTests(TestCase):
                 )
 
                 self.assertEqual(response.status_code, 201)
-                self.assertTrue((media_root / 'uploads' / 'test.txt').is_file())
+                self.assertTrue((media_root / 'test.txt').is_file())
 
     def test_download_preserves_the_original_filename_and_content_type(self):
         with tempfile.TemporaryDirectory() as temporary_dir:
             media_root = Path(temporary_dir) / 'media'
-            upload_dir = media_root / 'uploads'
+            upload_dir = media_root
             upload_dir.mkdir(parents=True)
             (upload_dir / 'report.pdf').write_bytes(b'%PDF-test')
 

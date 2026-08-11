@@ -46,17 +46,16 @@ http://192.168.1.1:8080
 
 ## Uploaded File Location
 
-When running from the source project, uploaded files are stored in `media/uploads/`.
+LocalShare creates a `files` folder automatically and saves every uploaded file there:
 
-For packaged applications, uploaded files are stored outside the app bundle so they persist after an update:
-
-| Platform | Upload folder |
+| How LocalShare is run | Upload folder |
 | --- | --- |
-| Windows | `%LOCALAPPDATA%\LocalShare\media\uploads` |
-| macOS | `~/AppData/Local/LocalShare/media/uploads` |
-| Linux | `~/AppData/Local/LocalShare/media/uploads` |
+| Windows executable | `files` next to `LocalShare.exe` |
+| Linux executable | `files` next to `LocalShare` |
+| macOS app | `files` next to `LocalShare.app` |
+| Source project | `files` in the project root, next to `manage.py` |
 
-Set the `FILE_MANAGER_DATA_DIR` environment variable before starting LocalShare to use a different storage location.
+Set the `FILE_MANAGER_DATA_DIR` environment variable before starting LocalShare to place the `files` folder somewhere else.
 
 
 

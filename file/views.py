@@ -48,9 +48,7 @@ def get_local_ip():
 
 def upload_file(request):
     if request.method == 'POST':
-        # مطمئن شو دایرکتوری وجود داره
-        upload_dir = os.path.join(settings.MEDIA_ROOT, 'uploads')
-        os.makedirs(upload_dir, exist_ok=True)
+        os.makedirs(settings.MEDIA_ROOT, exist_ok=True)
         
         form = FileUploadForm(request.POST, request.FILES)
         if form.is_valid():
@@ -76,7 +74,7 @@ def file_list(request):
     else:
         form = FileUploadForm()
 
-    upload_dir = os.path.join(settings.MEDIA_ROOT, 'uploads')
+    upload_dir = settings.MEDIA_ROOT
 
     if not os.path.exists(upload_dir):
         os.makedirs(upload_dir)
@@ -88,7 +86,7 @@ def file_list(request):
 
 def download_file(request, filename):
     """Stream an uploaded file while preserving its original download name."""
-    upload_dir = (Path(settings.MEDIA_ROOT) / 'uploads').resolve()
+    upload_dir = Path(settings.MEDIA_ROOT).resolve()
     file_path = (upload_dir / filename).resolve()
 
     # Do not allow a crafted URL to escape the upload directory.
