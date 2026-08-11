@@ -1,7 +1,22 @@
 import os
+import sys
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+# PyInstaller extracts bundled files to a temporary directory.  Keep read-only
+# application assets there, but store uploads and the SQLite database in a
+# persistent, writable location.
+if getattr(sys, 'frozen', False):
+    BASE_DIR = Path(sys._MEIPASS)
+    _default_data_dir = Path(
+        os.environ.get('LOCALAPPDATA', Path.home() / 'AppData' / 'Local')
+    ) / 'LocalShare'
+else:
+    BASE_DIR = Path(__file__).resolve().parent.parent
+    _default_data_dir = BASE_DIR
+
+DATA_DIR = Path(os.environ.get('FILE_MANAGER_DATA_DIR', _default_data_dir))
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+
 STATIC_URL = '/static/'
 
 SECRET_KEY = 'django-insecure-58*ae*cje4z*im2-&2@v@k+2(mr0(@o$0ve6%2lhnn$arb@%a@'
@@ -53,11 +68,6 @@ TEMPLATES = [
     },
 ]
 
-# Add this to help PyInstaller find the templates
-import sys
-if getattr(sys, 'frozen', False):
-    TEMPLATE_DIRS = [os.path.join(sys._MEIPASS, 'templates')]
-
 WSGI_APPLICATION = 'file_manager.wsgi.application'
 
 # Database
@@ -66,7 +76,7 @@ WSGI_APPLICATION = 'file_manager.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': DATA_DIR / 'db.sqlite3',
     }
 }
 
@@ -93,4 +103,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_ROOT = BASE_DIR / 'static'
+MEDIA_ROOT = DATA_DIR / 'media'
+MEDIA_URL = '/media/'

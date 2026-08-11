@@ -10,4 +10,5 @@ urlpatterns = [
     path('upload/success/', views.upload_success, name='file_upload_success'),
     path('file-list/', views.file_list, name='file_list'),
     path('download/<str:filename>/', views.download_file, name='download_file'),
+    path('shutdown/', views.shutdown, name='shutdown'),
 ]

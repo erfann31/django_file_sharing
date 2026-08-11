@@ -1,1 +1,57 @@
-# -*- coding: utf-8 -*-import loggingimport osimport sysimport socketimport webbrowserfrom threading import Timerfrom waitress import servefrom django.core.wsgi import get_wsgi_applicationfrom django.core.management import execute_from_command_line# Set Django settingsos.environ.setdefault('DJANGO_SETTINGS_MODULE', 'file_manager.settings')def get_local_ip():    """Get local IP address"""    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)    try:        s.connect(('8.8.8.8', 80))        ip = s.getsockname()[0]    except Exception:        ip = '127.0.0.1'    finally:        s.close()    return ipdef get_free_port():    """Get a free port on the system"""    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)    sock.bind(('', 0))    port = sock.getsockname()[1]    sock.close()    return portdef open_browser(ip, port):    """Open the browser after a short delay"""    webbrowser.open(f'http://{ip}:{port}')def run_server():    try:        """Run the Django application with waitress"""        # Get a free port and local IP        port = get_free_port()        ip = get_local_ip()        # Set IP and port as environment variables for Django        os.environ['SERVER_IP'] = ip        os.environ['SERVER_PORT'] = str(port)        # Prepare Django application        application = get_wsgi_application()        # Open browser after 1.5 seconds        Timer(1.5, open_browser, args=[ip, port]).start()        print(f"\nStarting File Sharing Server...")        print(f"Local Address: http://{ip}:{port}")        print(f"Network Address: http://{ip}:{port}")        print("\nScan the QR code in the browser window to connect from mobile devices")        print("To quit, close this window or press Ctrl+C\n")        # Run the server        serve(application, host='0.0.0.0', port=port)    except Exception as e:        logging.error(f"Server startup error: {e}")        import traceback        traceback.print_exc()if __name__ == '__main__':    # If this is the first run, perform Django migrations    if not os.path.exists('db.sqlite3'):        execute_from_command_line(['manage.py', 'migrate'])        # Create uploads directory if it doesn't exist    if not os.path.exists('uploads'):        os.makedirs('uploads')        # Start the server    run_server()
+import os
+import socket
+import threading
+import time
+import webbrowser
+import sys
+
+# Fake stdout/stderr for PyInstaller --noconsole
+if sys.stdout is None:
+    sys.stdout = open(os.devnull, "w")
+
+if sys.stderr is None:
+    sys.stderr = open(os.devnull, "w")
+
+
+def get_local_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+    except:
+        ip = "127.0.0.1"
+    finally:
+        s.close()
+    return ip
+
+
+ip = get_local_ip()
+port = 8000
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "file_manager.settings")
+os.environ.setdefault("SERVER_IP", ip)
+os.environ.setdefault("SERVER_PORT", str(port))
+
+
+def open_browser():
+    time.sleep(2)
+    webbrowser.open(f"http://{ip}:{port}")
+
+
+from django.core.management import execute_from_command_line
+from file_manager.wsgi import application
+from waitress import serve
+
+# A packaged installation starts without a database.  Apply the bundled
+# migrations before serving requests so the first completed upload cannot fail
+# with "no such table" after the browser has sent the file.
+execute_from_command_line(["manage.py", "migrate", "--noinput"])
+
+# Do not open the browser until the upload database is ready.
+threading.Thread(target=open_browser, daemon=True).start()
+
+# Django's development server was previously started with --nothreading,
+# which meant a file upload or download blocked every other client.  Waitress
+# is a production WSGI server and its worker threads allow requests from
+# multiple devices to be handled concurrently.
+serve(application, host="0.0.0.0", port=port, threads=8)

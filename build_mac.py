@@ -1,50 +1,51 @@
-import os
-import sys
+#!/usr/bin/env python3
+"""Build the native macOS LocalShare executable from the project root."""
+
+from pathlib import Path
+import platform
 import subprocess
+import sys
 
-def build_for_mac():
-    # Ensure you're in the project root directory
-    project_root = os.path.dirname(os.path.abspath(__file__))
-    os.chdir(project_root)
 
-    # Create a virtual environment
-    subprocess.run([sys.executable, '-m', 'venv', 'venv'], check=True)
+PROJECT_ROOT = Path(__file__).resolve().parent
+BUILD_VENV = PROJECT_ROOT / ".build-venv"
+OUTPUT = PROJECT_ROOT / "dist" / "LocalShare"
 
-    # Activate virtual environment
-    activate_this = os.path.join(project_root, 'venv', 'bin', 'activate_this.py')
-    exec(open(activate_this).read(), {'__file__': activate_this})
 
-    # Install dependencies
-    subprocess.run([sys.executable, '-m', 'pip', 'install',
-        'django',
-        'waitress',
-        'pyinstaller'
-    ], check=True)
+def run(*command: str) -> None:
+    subprocess.run(command, cwd=PROJECT_ROOT, check=True)
 
-    # Create spec file
-    subprocess.run([
-        'pyinstaller',
-        '--name=FileSharing',
-        '--onefile',  # Combine into single executable
-        '--windowed',  # No console window
-        '--add-data', 'templates:templates',
-        '--add-data', 'file/templates/file:templates/file',
-        '--add-data', 'static:static',
-        '--hidden-import=django.contrib.admin',
-        '--hidden-import=django.contrib.auth',
-        '--hidden-import=django.contrib.contenttypes',
-        '--hidden-import=django.contrib.sessions',
-        '--hidden-import=django.contrib.messages',
-        '--hidden-import=django.contrib.staticfiles',
-        '--hidden-import=django.template.loader_tags',
-        '--hidden-import=file',
-        '--hidden-import=waitress',
-        '--hidden-import=django.core.wsgi',
-        '--hidden-import=django.core.management',
-        'run.py'
-    ], check=True)
 
-    print("Build completed. Executable is in the 'dist' directory.")
+def main() -> None:
+    if platform.system() != "Darwin":
+        raise SystemExit(
+            "This builder must run on macOS. "
+            "Use build_windows.bat on Windows or build_linux.sh on Linux."
+        )
 
-if __name__ == '__main__':
-    build_for_mac()
+    print(f"Building LocalShare for macOS from:\n{PROJECT_ROOT}\n")
+
+    print("[1/4] Preparing an isolated build environment...")
+    build_python = BUILD_VENV / "bin" / "python"
+    if not build_python.is_file():
+        run(sys.executable, "-m", "venv", str(BUILD_VENV))
+
+    print("[2/4] Installing build requirements...")
+    run(str(build_python), "-m", "pip", "install", "-r", "requirements.txt")
+
+    print("[3/4] Collecting Django static files...")
+    run(str(build_python), "manage.py", "collectstatic", "--noinput")
+
+    print("[4/4] Creating the macOS executable...")
+    if OUTPUT.exists():
+        OUTPUT.unlink()
+    run(str(build_python), "-m", "PyInstaller", "--noconfirm", "--clean", "run.spec")
+
+    if not OUTPUT.is_file():
+        raise RuntimeError("PyInstaller finished but dist/LocalShare was not created.")
+
+    print("\nBuild complete: dist/LocalShare")
+
+
+if __name__ == "__main__":
+    main()

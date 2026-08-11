@@ -1,127 +1,183 @@
 {% extends "base.html" %}
+{% block extra_head %}
+<style>
+  .upload-heading { justify-content: center; }
+  .upload-heading .section-line { display: none; }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="section-head">
-    <span class="section-tag">send files</span>
-    <div class="section-line"></div>
+<div class="section-head upload-heading">
+  <span class="section-tag">send files</span>
+  <div class="section-line"></div>
 </div>
 
-<form id="upload-form" method="post" enctype="multipart/form-data">
-    {% csrf_token %}
+<form
+  id="upload-form"
+  method="post"
+  enctype="multipart/form-data"
+  action="{% url 'upload_file' %}"
+>
+  {% csrf_token %}
 
-    <label for="file-input" class="upload-area" id="drop-zone">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="16 16 12 12 8 16"/>
-            <line x1="12" y1="12" x2="12" y2="21"/>
-            <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
-        </svg>
-        <p id="file-label">// DROP FILES OR CLICK //</p>
-    </label>
-    <input type="file" id="file-input" name="file" multiple>
+  <label for="file-input" class="upload-area" id="drop-zone">
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <polyline points="16 16 12 12 8 16" />
+      <line x1="12" y1="12" x2="12" y2="21" />
+      <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" />
+    </svg>
+    <p id="file-label">// DROP FILES OR CLICK //</p>
+  </label>
+  <input type="file" id="file-input" name="file" multiple />
 
-    <div id="file-queue"></div>
+  <div id="file-queue"></div>
 
-    <div class="d-flex gap-3 justify-content-center mb-3">
-        <button type="button" id="upload-button" class="btn btn-primary">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="16 16 12 12 8 16"/>
-                <line x1="12" y1="12" x2="12" y2="21"/>
-                <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
-            </svg>
-            Send
-        </button>
-        <button type="button" id="cancel-button" class="btn btn-danger d-none">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"/>
-                <line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
-            Abort
-        </button>
+  <div class="d-flex gap-3 justify-content-center mb-3">
+    <button type="button" id="upload-button" class="btn btn-primary">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <polyline points="16 16 12 12 8 16" />
+        <line x1="12" y1="12" x2="12" y2="21" />
+        <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" />
+      </svg>
+      Send
+    </button>
+    <button type="button" id="cancel-button" class="btn btn-danger d-none">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <line x1="18" y1="6" x2="6" y2="18" />
+        <line x1="6" y1="6" x2="18" y2="18" />
+      </svg>
+      Abort
+    </button>
+  </div>
+
+  <div id="progress-container" class="d-none">
+    <div class="progress mb-2">
+      <div id="overall-progress-bar" role="progressbar"></div>
     </div>
+    <div id="overall-progress-text">0%</div>
+  </div>
 
-    <div id="progress-container" class="d-none">
-        <div class="progress mb-2">
-            <div id="overall-progress-bar" role="progressbar"></div>
-        </div>
-        <div id="overall-progress-text">0%</div>
-    </div>
-
-    <p id="file-warning" class="text-danger d-none text-center">// no files selected //</p>
+  <p id="file-warning" class="text-danger d-none text-center">
+    // no files selected //
+  </p>
 </form>
 
 <div class="divider"></div>
 
 <div id="nav-buttons" class="d-flex justify-content-center gap-3">
-    <a class="btn btn-secondary" href="/">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-            <polyline points="9 22 9 12 15 12 15 22"/>
-        </svg>
-        Home
-    </a>
-    <a class="btn btn-secondary" href="/file-list">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-        </svg>
-        Files
-    </a>
+  <a class="btn btn-secondary" href="{% url 'home' %}">
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+      <polyline points="9 22 9 12 15 12 15 22" />
+    </svg>
+    Home
+  </a>
+  <a class="btn btn-secondary" href="{% url 'file_list' %}">
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path
+        d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"
+      />
+    </svg>
+    Files
+  </a>
 </div>
 
 <script>
-let fileQueue = [];
-let uploadInProgress = false;
-let xhr;
-let uploadedFileCount = 0;
+  let fileQueue = [];
+  let uploadInProgress = false;
+  let xhr;
+  let uploadedFileCount = 0;
 
-const dropZone = document.getElementById('drop-zone');
+  const dropZone = document.getElementById("drop-zone");
 
-dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
-dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
-dropZone.addEventListener('drop', e => {
+  dropZone.addEventListener("dragover", (e) => {
     e.preventDefault();
-    dropZone.classList.remove('drag-over');
+    dropZone.classList.add("drag-over");
+  });
+  dropZone.addEventListener("dragleave", () =>
+    dropZone.classList.remove("drag-over"),
+  );
+  dropZone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dropZone.classList.remove("drag-over");
     Array.from(e.dataTransfer.files).forEach(addFileToQueue);
-});
+  });
 
-function xIcon() {
-    const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
-    svg.setAttribute('viewBox','0 0 24 24');
-    svg.setAttribute('fill','none');
-    svg.setAttribute('stroke','currentColor');
-    svg.setAttribute('stroke-width','2');
-    svg.setAttribute('stroke-linecap','round');
-    svg.setAttribute('stroke-linejoin','round');
-    svg.innerHTML='<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>';
+  function xIcon() {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor");
+    svg.setAttribute("stroke-width", "2");
+    svg.setAttribute("stroke-linecap", "round");
+    svg.setAttribute("stroke-linejoin", "round");
+    svg.innerHTML =
+      '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>';
     return svg;
-}
+  }
 
-function addFileToQueue(file) {
-    const container = document.getElementById('file-queue');
-    const item = document.createElement('div');
-    item.classList.add('file-item');
+  function addFileToQueue(file) {
+    const container = document.getElementById("file-queue");
+    const item = document.createElement("div");
+    item.classList.add("file-item");
 
-    const name = document.createElement('span');
+    const name = document.createElement("span");
     name.textContent = file.name;
 
-    const trackWrap = document.createElement('div');
-    trackWrap.className = 'progress-container';
-    const track = document.createElement('div');
-    track.className = 'progress-track';
-    const bar = document.createElement('div');
-    bar.className = 'progress-bar';
+    const trackWrap = document.createElement("div");
+    trackWrap.className = "progress-container";
+    const track = document.createElement("div");
+    track.className = "progress-track";
+    const bar = document.createElement("div");
+    bar.className = "progress-bar";
     track.appendChild(bar);
-    const pct = document.createElement('div');
-    pct.className = 'progress-text';
-    pct.textContent = '0%';
+    const pct = document.createElement("div");
+    pct.className = "progress-text";
+    pct.textContent = "0%";
     trackWrap.appendChild(track);
     trackWrap.appendChild(pct);
 
-    const rm = document.createElement('div');
-    rm.className = 'remove-file';
+    const rm = document.createElement("div");
+    rm.className = "remove-file";
     rm.appendChild(xIcon());
-    rm.addEventListener('click', () => {
-        fileQueue = fileQueue.filter(f => f.file !== file);
-        container.removeChild(item);
+    rm.addEventListener("click", () => {
+      fileQueue = fileQueue.filter((f) => f.file !== file);
+      container.removeChild(item);
     });
 
     item.appendChild(name);
@@ -129,99 +185,150 @@ function addFileToQueue(file) {
     item.appendChild(rm);
     container.appendChild(item);
     fileQueue.push({ file, bar, pct, rm });
-    document.getElementById('file-label').textContent = '// ADD MORE FILES //';
-}
+    document.getElementById("file-label").textContent = "// ADD MORE FILES //";
+  }
 
-document.getElementById('file-input').addEventListener('change', function () {
+  document.getElementById("file-input").addEventListener("change", function () {
     Array.from(this.files).forEach(addFileToQueue);
-    this.value = '';
-});
+    this.value = "";
+  });
 
-document.getElementById('upload-button').addEventListener('click', function () {
-    if (uploadInProgress) return;
-    if (fileQueue.length === 0) {
-        document.getElementById('file-warning').classList.remove('d-none');
+  document
+    .getElementById("upload-button")
+    .addEventListener("click", function () {
+      if (uploadInProgress) return;
+      if (fileQueue.length === 0) {
+        document.getElementById("file-warning").classList.remove("d-none");
         return;
-    }
-    document.getElementById('file-warning').classList.add('d-none');
-    fileQueue.forEach(f => f.rm.style.display = 'none');
+      }
+      document.getElementById("file-warning").classList.add("d-none");
+      fileQueue.forEach((f) => (f.rm.style.display = "none"));
 
-    const overallBar  = document.getElementById('overall-progress-bar');
-    const overallText = document.getElementById('overall-progress-text');
-    const cancelBtn   = document.getElementById('cancel-button');
-    const progressCnt = document.getElementById('progress-container');
-    const navBtns     = document.getElementById('nav-buttons');
-    const uploadBtn   = document.getElementById('upload-button');
+      const overallBar = document.getElementById("overall-progress-bar");
+      const overallText = document.getElementById("overall-progress-text");
+      const cancelBtn = document.getElementById("cancel-button");
+      const progressCnt = document.getElementById("progress-container");
+      const navBtns = document.getElementById("nav-buttons");
+      const uploadBtn = document.getElementById("upload-button");
 
-    overallBar.style.width = '0%';
-    overallText.textContent = '0%';
-    cancelBtn.classList.remove('d-none');
-    uploadBtn.classList.add('d-none');
-    navBtns.classList.add('d-none');
-    progressCnt.classList.remove('d-none');
-    progressCnt.style.display = 'flex';
+      overallBar.style.width = "0%";
+      overallText.textContent = "0%";
+      cancelBtn.classList.remove("d-none");
+      uploadBtn.classList.add("d-none");
+      navBtns.classList.add("d-none");
+      progressCnt.classList.remove("d-none");
+      progressCnt.style.display = "flex";
 
-    uploadInProgress = true;
-    uploadedFileCount = 0;
+      uploadInProgress = true;
+      uploadedFileCount = 0;
+      const failedFiles = [];
 
-    function updateOverall() {
-        const total = fileQueue.reduce((s, f) => s + parseInt(f.pct.textContent), 0);
+      function updateOverall() {
+        const total = fileQueue.reduce(
+          (s, f) => s + parseInt(f.pct.textContent),
+          0,
+        );
         const pct = Math.round(total / fileQueue.length);
-        overallBar.style.width = pct + '%';
-        overallText.textContent = pct + '%';
-    }
+        overallBar.style.width = pct + "%";
+        overallText.textContent = pct + "%";
+      }
 
-    function uploadFile(idx) {
+      function finishUpload() {
+        uploadInProgress = false;
+        cancelBtn.classList.add("d-none");
+
+        if (failedFiles.length > 0) {
+          // Some files failed: show a summary but still let the user
+          // see which ones went through, instead of just stopping silently.
+          const list = failedFiles
+            .map((f) => `- ${f.name}: ${f.reason}`)
+            .join("\n");
+          alert(
+            `${uploadedFileCount}/${fileQueue.length} file(s) uploaded.\n\nFailed:\n${list}`,
+          );
+          if (uploadedFileCount > 0) {
+            window.location.href = "{% url 'file_upload_success' %}";
+          } else {
+            // Nothing succeeded: let the user retry instead of redirecting.
+            progressCnt.classList.add("d-none");
+            navBtns.classList.remove("d-none");
+            uploadBtn.classList.remove("d-none");
+            fileQueue.forEach((f) => (f.rm.style.display = ""));
+          }
+        } else {
+          window.location.href = "{% url 'file_upload_success' %}";
+        }
+      }
+
+      function uploadFile(idx) {
         if (idx >= fileQueue.length || !uploadInProgress) {
+          if (idx >= fileQueue.length) {
+            finishUpload();
+          } else {
             uploadInProgress = false;
-            cancelBtn.classList.add('d-none');
-            return;
+            cancelBtn.classList.add("d-none");
+          }
+          return;
         }
         const { file, bar, pct } = fileQueue[idx];
         const fd = new FormData();
-        fd.append('file', file);
-        fd.append('csrfmiddlewaretoken', document.getElementsByName('csrfmiddlewaretoken')[0].value);
+        fd.append("file", file);
+        fd.append(
+          "csrfmiddlewaretoken",
+          document.getElementsByName("csrfmiddlewaretoken")[0].value,
+        );
 
         xhr = new XMLHttpRequest();
-        xhr.upload.addEventListener('progress', e => {
-            if (e.lengthComputable) {
-                const p = Math.round((e.loaded / e.total) * 100);
-                bar.style.width = p + '%';
-                pct.textContent = p + '%';
-                updateOverall();
-            }
+        xhr.upload.addEventListener("progress", (e) => {
+          if (e.lengthComputable) {
+            const p = Math.round((e.loaded / e.total) * 100);
+            bar.style.width = p + "%";
+            pct.textContent = p + "%";
+            updateOverall();
+          }
         });
         xhr.onload = function () {
-            if (xhr.status === 201) {
-                uploadedFileCount++;
-                if (uploadedFileCount === fileQueue.length) {
-                    window.location.href = "{% url 'file_upload_success' %}";
-                }
-                uploadFile(idx + 1);
-            } else {
-                alert('Upload failed.');
-                uploadInProgress = false;
-                cancelBtn.classList.add('d-none');
-            }
+          if (xhr.status === 201) {
+            uploadedFileCount++;
+            bar.style.width = "100%";
+            pct.textContent = "100%";
+          } else {
+            failedFiles.push({ name: file.name, reason: `status ${xhr.status}` });
+            pct.textContent = "error";
+            bar.style.background = "var(--accent3, #e33)";
+          }
+          updateOverall();
+          // Always move on to the next file, whether this one succeeded or not.
+          uploadFile(idx + 1);
         };
-        xhr.open('POST', document.getElementById('upload-form').action || window.location.href, true);
+        xhr.onerror = function () {
+          failedFiles.push({ name: file.name, reason: "network error" });
+          pct.textContent = "error";
+          bar.style.background = "var(--accent3, #e33)";
+          updateOverall();
+          uploadFile(idx + 1);
+        };
+        xhr.open("POST", "{% url 'upload_file' %}", true);
         xhr.send(fd);
-    }
+      }
 
-    uploadFile(0);
-});
+      uploadFile(0);
+    });
 
-document.getElementById('cancel-button').addEventListener('click', function () {
-    uploadInProgress = false;
-    if (xhr) xhr.abort();
-    fileQueue = [];
-    document.getElementById('file-queue').innerHTML = '';
-    document.getElementById('file-label').textContent = '// DROP FILES OR CLICK //';
-    document.getElementById('file-warning').classList.add('d-none');
-    document.getElementById('progress-container').classList.add('d-none');
-    document.getElementById('nav-buttons').classList.remove('d-none');
-    document.getElementById('upload-button').classList.remove('d-none');
-    document.getElementById('cancel-button').classList.add('d-none');
-});
+  document
+    .getElementById("cancel-button")
+    .addEventListener("click", function () {
+      uploadInProgress = false;
+      if (xhr) xhr.abort();
+      fileQueue = [];
+      document.getElementById("file-queue").innerHTML = "";
+      document.getElementById("file-label").textContent =
+        "// DROP FILES OR CLICK //";
+      document.getElementById("file-warning").classList.add("d-none");
+      document.getElementById("progress-container").classList.add("d-none");
+      document.getElementById("nav-buttons").classList.remove("d-none");
+      document.getElementById("upload-button").classList.remove("d-none");
+      document.getElementById("cancel-button").classList.add("d-none");
+    });
 </script>
 {% endblock %}

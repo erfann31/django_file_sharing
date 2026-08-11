@@ -1,29 +1,39 @@
 <!DOCTYPE html>
-<html lang="fa" dir="ltr">
+<html lang="en" dir="ltr">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="UTF-8">
-    <title>{% block title %}XFER // Local{% endblock %}</title>
+    <title>{% block title %}LocalShare{% endblock %}</title>
     {% block extra_head %}{% endblock %}
     <style>
         /* ── OFFLINE FONT: monospace stack, no external requests ── */
         :root {
-            --bg:        #080a0c;
-            --surface:   #0e1115;
-            --card:      #131820;
-            --border:    #1e2835;
-            --border2:   #2a3545;
-            --accent:    #00e5ff;
-            --accent2:   #7fff5f;
-            --accent3:   #ff5f8f;
-            --text:      #c8d8e8;
-            --text2:     #7a98b8;
-            --muted:     #3d5068;
-            --danger:    #ff5f5f;
-            --radius:    4px;
+            --bg:        #f1f5f9;
+            --surface:   #ffffff;
+            --card:      #ffffff;
+            --border:    #d7e0ec;
+            --border2:   #b9c8dc;
+            --accent:    #2563eb;
+            --accent-rgb: 37, 99, 235;
+            --accent2:   #15803d;
+            --accent2-rgb: 21, 128, 61;
+            --accent3:   #be123c;
+            --text:      #172554;
+            --text2:     #475569;
+            --muted:     #64748b;
+            --danger:    #be123c;
+            --radius:    12px;
             --tr:        .15s ease;
             --font:      'Courier New', 'Lucida Console', Courier, monospace;
             --font-ui:   'Trebuchet MS', 'Segoe UI', Tahoma, sans-serif;
+        }
+
+        [data-theme="dark"] {
+            --bg: #080a0c; --surface: #0e1115; --card: #131820;
+            --border: #1e2835; --border2: #2a3545; --accent: #37d5ed;
+            --accent-rgb: 55, 213, 237; --accent2: #70d98a;
+            --accent2-rgb: 112, 217, 138; --accent3: #ff7ca3; --text: #c8d8e8;
+            --text2: #7a98b8; --muted: #3d5068; --danger: #ff5f5f;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -43,7 +53,7 @@
             align-items: center;
         }
 
-        /* ── SCANLINE OVERLAY ── */
+        /* ── SUBTLE TEXTURE ── */
         body::before {
             content: '';
             position: fixed;
@@ -52,8 +62,8 @@
                 0deg,
                 transparent,
                 transparent 2px,
-                rgba(0,0,0,.08) 2px,
-                rgba(0,0,0,.08) 4px
+                rgba(37,99,235,.014) 2px,
+                rgba(37,99,235,.014) 4px
             );
             pointer-events: none;
             z-index: 9999;
@@ -68,12 +78,12 @@
         .bg-glow-1 {
             width: 700px; height: 700px;
             top: -200px; left: -200px;
-            background: radial-gradient(circle, rgba(0,229,255,.035) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(var(--accent-rgb), .10) 0%, transparent 70%);
         }
         .bg-glow-2 {
             width: 500px; height: 500px;
             bottom: -100px; right: -100px;
-            background: radial-gradient(circle, rgba(127,255,95,.025) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(var(--accent2-rgb), .07) 0%, transparent 70%);
         }
 
         /* ── GRID PATTERN ── */
@@ -83,8 +93,8 @@
             pointer-events: none;
             z-index: 0;
             background-image:
-                linear-gradient(rgba(30,40,53,.6) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(30,40,53,.6) 1px, transparent 1px);
+                linear-gradient(rgba(185,200,220,.28) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(185,200,220,.28) 1px, transparent 1px);
             background-size: 32px 32px;
         }
 
@@ -122,7 +132,7 @@
             font-weight: bold;
             letter-spacing: 3px;
             color: var(--accent);
-            text-shadow: 0 0 18px rgba(0,229,255,.35);
+            text-shadow: 0 0 18px rgba(var(--accent-rgb), .18);
         }
         .logo-sub {
             font-family: var(--font);
@@ -140,6 +150,19 @@
             color: var(--text2);
             letter-spacing: 1px;
         }
+        .topbar-actions { display: flex; align-items: center; gap: 8px; }
+        .theme-toggle {
+            width: 34px;
+            height: 34px;
+            border: 1px solid var(--border2);
+            border-radius: 50%;
+            background: var(--surface);
+            color: var(--text2);
+            cursor: pointer;
+            font-size: 16px;
+            line-height: 1;
+        }
+        .theme-toggle:hover { color: var(--accent); border-color: var(--accent); }
         .dot {
             width: 7px; height: 7px;
             border-radius: 50%;
@@ -156,7 +179,7 @@
         .card {
             background: var(--card);
             border: 1px solid var(--border);
-            border-top: 2px solid var(--accent);
+            border-top: 3px solid var(--accent);
             border-radius: var(--radius);
             padding: 32px 28px;
             position: relative;
@@ -168,7 +191,7 @@
             position: absolute;
             top: 0; left: 0; right: 0;
             height: 60px;
-            background: linear-gradient(180deg, rgba(0,229,255,.04) 0%, transparent 100%);
+            background: linear-gradient(180deg, rgba(8,126,164,.05) 0%, transparent 100%);
             pointer-events: none;
         }
         @keyframes slideIn {
@@ -190,9 +213,9 @@
             color: var(--accent);
             text-transform: uppercase;
             padding: 3px 8px;
-            border: 1px solid rgba(0,229,255,.3);
+            border: 1px solid rgba(var(--accent-rgb), .3);
             border-radius: 2px;
-            background: rgba(0,229,255,.05);
+            background: rgba(var(--accent-rgb), .05);
         }
         .section-line {
             flex: 1;
@@ -243,25 +266,25 @@
         .btn:active { transform: scale(.97); }
 
         .btn-primary {
-            background: rgba(0,229,255,.1);
-            border-color: rgba(0,229,255,.4);
+            background: rgba(var(--accent-rgb), .1);
+            border-color: rgba(var(--accent-rgb), .4);
             color: var(--accent);
         }
         .btn-primary:hover {
-            background: rgba(0,229,255,.18);
+            background: rgba(var(--accent-rgb), .18);
             border-color: var(--accent);
-            box-shadow: 0 0 16px rgba(0,229,255,.2), inset 0 0 0 1px rgba(0,229,255,.15);
+            box-shadow: 0 0 16px rgba(var(--accent-rgb), .2), inset 0 0 0 1px rgba(var(--accent-rgb), .15);
         }
 
         .btn-secondary {
-            background: rgba(127,255,95,.07);
-            border-color: rgba(127,255,95,.3);
+            background: rgba(var(--accent2-rgb), .07);
+            border-color: rgba(var(--accent2-rgb), .3);
             color: var(--accent2);
         }
         .btn-secondary:hover {
-            background: rgba(127,255,95,.14);
+            background: rgba(var(--accent2-rgb), .14);
             border-color: var(--accent2);
-            box-shadow: 0 0 16px rgba(127,255,95,.15);
+            box-shadow: 0 0 16px rgba(var(--accent2-rgb), .15);
         }
 
         .btn-danger {
@@ -301,7 +324,7 @@
             margin: 16px 0;
             letter-spacing: 1px;
             text-align: center;
-            text-shadow: 0 0 12px rgba(127,255,95,.3);
+            text-shadow: 0 0 12px rgba(var(--accent2-rgb), .3);
             word-break: break-all;
         }
 
@@ -322,7 +345,7 @@
             position: absolute;
             inset: -1px;
             border-radius: var(--radius);
-            border: 1px solid rgba(0,229,255,.2);
+            border: 1px solid rgba(var(--accent-rgb), .2);
         }
         .icon-circle svg { width: 32px; height: 32px; color: var(--accent); }
 
@@ -361,8 +384,8 @@
             transition: var(--tr);
         }
         .file-list li:hover {
-            border-color: rgba(0,229,255,.4);
-            background: rgba(0,229,255,.03);
+            border-color: rgba(var(--accent-rgb), .4);
+            background: rgba(var(--accent-rgb), .03);
         }
         .file-list a {
             color: var(--text);
@@ -395,12 +418,12 @@
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(135deg, rgba(0,229,255,.03), transparent 60%);
+            background: linear-gradient(135deg, rgba(var(--accent-rgb), .03), transparent 60%);
             pointer-events: none;
         }
         .upload-area:hover, .upload-area.drag-over {
             border-color: var(--accent);
-            background: rgba(0,229,255,.04);
+            background: rgba(var(--accent-rgb), .04);
         }
         .upload-area svg { width: 40px; height: 40px; color: var(--accent); margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto; }
         .upload-area p { color: var(--text2); font-family: var(--font); font-size: 13px; letter-spacing: 1px; }
@@ -445,7 +468,7 @@
             border-radius: 2px;
             width: 0%;
             transition: width .3s ease;
-            box-shadow: 0 0 8px rgba(0,229,255,.4);
+            box-shadow: 0 0 8px rgba(var(--accent-rgb), .4);
         }
         #overall-progress-text { font-family: var(--font); font-size: 11px; color: var(--text2); text-align: center; letter-spacing: 2px; }
 
@@ -458,7 +481,7 @@
             border-radius: var(--radius);
             display: inline-block;
             margin-bottom: 20px;
-            box-shadow: 0 0 30px rgba(0,229,255,.1);
+            box-shadow: 0 0 30px rgba(var(--accent-rgb), .1);
         }
 
         /* ── RESPONSIVE ── */
@@ -476,19 +499,44 @@
 
 <div class="page-wrapper">
     <header class="topbar">
-        <a href="/" class="logo">
-            <span class="logo-name">XFER</span>
+        <a href="{% url 'home' %}" class="logo">
+            <span class="logo-name">LocalShare</span>
             <span class="logo-sub">local file transfer</span>
         </a>
-        <div class="status-dot">
-            <span class="dot"></span>
-            <span>ONLINE</span>
+        <div class="topbar-actions">
+            <button class="theme-toggle" type="button" id="theme-toggle" aria-label="Switch to dark theme" title="Switch theme">☾</button>
+            <a href="{% url 'shutdown' %}" class="btn btn-danger">SHUTDOWN</a>
+            <div class="status-dot">
+                <span class="dot"></span>
+                <span>ONLINE</span>
+            </div>
         </div>
+
     </header>
 
     <div class="card">
         {% block content %}{% endblock %}
     </div>
 </div>
+<script>
+    (function () {
+        const savedTheme = localStorage.getItem('localshare-theme');
+        const theme = savedTheme || 'light';
+        const button = document.getElementById('theme-toggle');
+
+        function applyTheme(value) {
+            document.documentElement.dataset.theme = value;
+            button.textContent = value === 'dark' ? '☀' : '☾';
+            button.setAttribute('aria-label', value === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
+        }
+
+        applyTheme(theme);
+        button.addEventListener('click', function () {
+            const nextTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('localshare-theme', nextTheme);
+            applyTheme(nextTheme);
+        });
+    }());
+</script>
 </body>
 </html>
