@@ -1,9 +1,11 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="UTF-8">
     <title>{% block title %}LocalShare{% endblock %}</title>
+    <link rel="icon" type="image/svg+xml" href="{% static 'file/localshare-logo.svg' %}">
     {% block extra_head %}{% endblock %}
     <style>
         /* ── OFFLINE FONT: monospace stack, no external requests ── */
@@ -122,10 +124,12 @@
         }
         .logo {
             display: flex;
-            flex-direction: column;
-            gap: 1px;
+            align-items: center;
+            gap: 10px;
             text-decoration: none;
         }
+        .logo-mark { width: 38px; height: 38px; flex: 0 0 38px; }
+        .logo-copy { display: flex; flex-direction: column; gap: 1px; }
         .logo-name {
             font-family: var(--font);
             font-size: 18px;
@@ -500,8 +504,11 @@
 <div class="page-wrapper">
     <header class="topbar">
         <a href="{% url 'home' %}" class="logo">
-            <span class="logo-name">LocalShare</span>
-            <span class="logo-sub">local file transfer</span>
+            <img class="logo-mark" src="{% static 'file/localshare-logo.svg' %}" alt="">
+            <span class="logo-copy">
+                <span class="logo-name">LocalShare</span>
+                <span class="logo-sub">local file transfer</span>
+            </span>
         </a>
         <div class="topbar-actions">
             <button class="theme-toggle" type="button" id="theme-toggle" aria-label="Switch to dark theme" title="Switch theme">☾</button>

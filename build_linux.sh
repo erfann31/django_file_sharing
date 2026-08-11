@@ -42,6 +42,7 @@ echo
 echo "[4/4] Creating the Linux executable..."
 rm -f -- "$OUTPUT"
 "$BUILD_PYTHON" -m PyInstaller --noconfirm --clean run.spec
+cp -- "file/static/file/localshare-logo.png" "$PROJECT_ROOT/dist/localshare-logo.png"
 
 if [[ ! -f "$OUTPUT" ]]; then
     echo "ERROR: PyInstaller finished but dist/LocalShare was not created." >&2

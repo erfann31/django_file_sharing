@@ -21,9 +21,17 @@
 #     static/                  (created by collectstatic)
 
 import sys
+from pathlib import Path
 from PyInstaller.utils.hooks import collect_submodules
 
 block_cipher = None
+icon_dir = Path('file') / 'static' / 'file'
+if sys.platform.startswith('win'):
+    app_icon = icon_dir / 'localshare-logo.ico'
+elif sys.platform == 'darwin':
+    app_icon = icon_dir / 'localshare-logo.icns'
+else:
+    app_icon = None
 
 hidden_imports = (
     collect_submodules('django')
@@ -74,6 +82,7 @@ exe = EXE(
     upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
+    icon=str(app_icon) if app_icon else None,
     console=False,      # set True temporarily if you need to see errors
     disable_windowed_traceback=False,
     argv_emulation=False,
@@ -81,3 +90,12 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
 )
+
+# macOS displays application icons through an .app bundle.
+if sys.platform == 'darwin':
+    app = BUNDLE(
+        exe,
+        name='LocalShare.app',
+        icon=str(app_icon),
+        bundle_identifier='com.localshare.app',
+    )

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">LocalShare</title>
+  <desc id="desc">A document with arrows showing local file transfer.</desc>
+  <defs>
+    <linearGradient id="surface" x1="9" y1="7" x2="55" y2="57" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2563eb"/>
+      <stop offset="1" stop-color="#15803d"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="56" height="56" rx="15" fill="url(#surface)"/>
+  <path d="M21 15h15l8 8v25.5A3.5 3.5 0 0 1 40.5 52h-19a3.5 3.5 0 0 1-3.5-3.5v-30A3.5 3.5 0 0 1 21.5 15Z" fill="#fff" fill-opacity=".96"/>
+  <path d="M36 15v8h8" fill="none" stroke="#bfdbfe" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M24 32h13m0 0-4-4m4 4-4 4M38 41H25m0 0 4-4m-4 4 4 4" fill="none" stroke="#2563eb" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

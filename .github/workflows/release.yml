@@ -47,7 +47,7 @@ jobs:
 
       - name: Package Linux executable
         if: runner.os == 'Linux'
-        run: tar -C dist -czf LocalShare-linux-x64.tar.gz LocalShare
+        run: tar -C dist -czf LocalShare-linux-x64.tar.gz LocalShare localshare-logo.png
 
       - name: Upload release asset
         uses: actions/upload-artifact@v4

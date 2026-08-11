@@ -9,7 +9,7 @@ import sys
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 BUILD_VENV = PROJECT_ROOT / ".build-venv"
-OUTPUT = PROJECT_ROOT / "dist" / "LocalShare"
+OUTPUT = PROJECT_ROOT / "dist" / "LocalShare.app"
 
 
 def run(*command: str) -> None:
@@ -42,9 +42,9 @@ def main() -> None:
     run(str(build_python), "-m", "PyInstaller", "--noconfirm", "--clean", "run.spec")
 
     if not OUTPUT.is_file():
-        raise RuntimeError("PyInstaller finished but dist/LocalShare was not created.")
+        raise RuntimeError("PyInstaller finished but dist/LocalShare.app was not created.")
 
-    print("\nBuild complete: dist/LocalShare")
+    print("\nBuild complete: dist/LocalShare.app")
 
 
 if __name__ == "__main__":
