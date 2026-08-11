@@ -22,6 +22,9 @@ jobs:
           - name: Linux x64
             os: ubuntu-latest
             artifact: localshare-linux-x64
+          - name: macOS Intel
+            os: macos-13
+            artifact: localshare-macos-x64
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -48,6 +51,14 @@ jobs:
       - name: Package Linux executable
         if: runner.os == 'Linux'
         run: tar -C dist -czf LocalShare-linux-x64.tar.gz LocalShare localshare-logo.png
+
+      - name: Build macOS application
+        if: runner.os == 'macOS'
+        run: python3 build_mac.py
+
+      - name: Package macOS application
+        if: runner.os == 'macOS'
+        run: tar -C dist -czf LocalShare-macos-x64.tar.gz LocalShare.app
 
       - name: Upload release asset
         uses: actions/upload-artifact@v4

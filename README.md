@@ -44,6 +44,20 @@ For example:
 http://192.168.1.1:8080
 ```
 
+## Uploaded File Location
+
+When running from the source project, uploaded files are stored in `media/uploads/`.
+
+For packaged applications, uploaded files are stored outside the app bundle so they persist after an update:
+
+| Platform | Upload folder |
+| --- | --- |
+| Windows | `%LOCALAPPDATA%\LocalShare\media\uploads` |
+| macOS | `~/AppData/Local/LocalShare/media/uploads` |
+| Linux | `~/AppData/Local/LocalShare/media/uploads` |
+
+Set the `FILE_MANAGER_DATA_DIR` environment variable before starting LocalShare to use a different storage location.
+
 
 
 
