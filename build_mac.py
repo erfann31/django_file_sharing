@@ -3,17 +3,29 @@
 
 from pathlib import Path
 import platform
+import shutil
 import subprocess
 import sys
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 BUILD_VENV = PROJECT_ROOT / ".build-venv"
-OUTPUT = PROJECT_ROOT / "dist" / "LocalShare.app"
+OUTPUTS = (
+    PROJECT_ROOT / "dist" / "LocalShare.app",
+    PROJECT_ROOT / "dist" / "LocalShare",
+)
 
 
 def run(*command: str) -> None:
     subprocess.run(command, cwd=PROJECT_ROOT, check=True)
+
+
+def remove_previous_outputs() -> None:
+    for output in OUTPUTS:
+        if output.is_dir():
+            shutil.rmtree(output)
+        elif output.exists():
+            output.unlink()
 
 
 def main() -> None:
@@ -37,14 +49,15 @@ def main() -> None:
     run(str(build_python), "manage.py", "collectstatic", "--noinput")
 
     print("[4/4] Creating the macOS executable...")
-    if OUTPUT.exists():
-        OUTPUT.unlink()
+    remove_previous_outputs()
     run(str(build_python), "-m", "PyInstaller", "--noconfirm", "--clean", "run.spec")
 
-    if not OUTPUT.is_file():
-        raise RuntimeError("PyInstaller finished but dist/LocalShare.app was not created.")
+    for output in OUTPUTS:
+        if output.is_dir() or output.is_file():
+            print(f"\nBuild complete: dist/{output.name}")
+            return
 
-    print("\nBuild complete: dist/LocalShare.app")
+    raise RuntimeError("PyInstaller finished but no LocalShare macOS application was created.")
 
 
 if __name__ == "__main__":
