@@ -5,6 +5,12 @@ on:
     tags:
       - "v*"
   workflow_dispatch:
+    inputs:
+      include_macos:
+        description: "Also build the macOS application"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -25,6 +31,10 @@ jobs:
           - name: macOS Intel
             os: macos-13
             artifact: localshare-macos-x64
+    # macOS runners are opt-in because they are more expensive. Include them
+    # for release tags ending in "-mac" (for example, v1.2.0-mac), or when
+    # the checkbox is selected for a manually dispatched workflow.
+    if: ${{ matrix.os != 'macos-13' || endsWith(github.ref_name, '-mac') || inputs.include_macos }}
     runs-on: ${{ matrix.os }}
 
     steps:
