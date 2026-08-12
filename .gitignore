@@ -163,7 +163,5 @@ cython_debug/
 /static/
 /uploads/
 
-# Django migration files
-**/migrations/*.py
-!**/migrations/__init__.py
+# Django migration bytecode
 **/migrations/*.pyc
